@@ -1,21 +1,21 @@
 {
-  "name": "starter-slapp-app",
-  "version": "1.0.0",
-  "description": "Basic Slack app using the Slapp library and Slack Events API",
+  "name": "yolk-slack-app",
+  "version": "0.1.0",
+  "description": "Yolk slack app",
   "scripts": {
     "watch": "nodemon server.js",
     "test": "standard"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/BeepBoopHQ/starter-slapp-app.git"
+    "url": "git+https://github.com/jamesalexsmith/yolk-slack-app.git"
   },
-  "author": "Brad Harris",
+  "author": "Alex Smith",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/BeepBoopHQ/starter-slapp-app/issues"
+    "url": "https://github.com/jamesalexsmith/yolk-slack-app/issues"
   },
-  "homepage": "https://github.com/BeepBoopHQ/starter-slapp-app#readme",
+  "homepage": "https://github.com/jamesalexsmith/yolk-slack-app",
   "dependencies": {
     "express": "^4.14.0",
     "nodemon": "^1.11.0",
