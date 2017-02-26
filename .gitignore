@@ -38,3 +38,9 @@ jspm_packages
 .node_repl_history
 
 yarn.lock
+
+node_modules
+npm-debug.log
+out.jsonl
+setup.txt
+.DS_Store
