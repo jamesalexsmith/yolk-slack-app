@@ -4,6 +4,7 @@ const express = require('express')
 const Slapp = require('slapp')
 const ConvoStore = require('slapp-convo-beepboop')
 const Context = require('slapp-context-beepboop')
+const smb = require('slack-message-builder')
 
 // use `PORT` env var on Beep Boop - default to 3000 locally
 var port = process.env.PORT || 3000
@@ -20,7 +21,8 @@ var server = slapp.attachToExpress(express())
 
 var app = {
   slapp,
-  server
+  server,
+  smb
 }
 
 require('./src/flows')(app)
