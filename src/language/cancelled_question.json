@@ -1,0 +1,21 @@
+{
+    "text": "_Here's your question so far:_",
+    "replace_original": true,
+    "attachments": [
+        {
+            "mrkdwn_in": ["text", "pretext", "fields"],
+            "fallback": "Required plain-text summary of the attachment.",
+            "color": "#FDCE2E",
+            "title": "Where is the product sheet?",
+            "fields": [
+                {
+                    "value": "```Do you have any more details you'd like to include?```",
+                    "short": true
+                },
+                {
+                    "value": "Ok, not doing it. Whew that was close :cold_sweat:"
+                }
+            ]
+        }
+    ]
+}
