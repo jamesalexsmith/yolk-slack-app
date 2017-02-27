@@ -18,14 +18,19 @@ var slapp = Slapp({
 
 // attach Slapp to express server
 var server = slapp.attachToExpress(express())
+var SlackWebClient = require('@slack/client').WebClient;
 
 var app = {
   slapp,
   server,
+  SlackWebClient,
   smb
 }
 
+// Conversation flows
 require('./src/flows')(app)
+
+
 
 // var HELP_TEXT = `
 // I will respond to the following messages:

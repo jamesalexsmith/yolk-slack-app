@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/jamesalexsmith/yolk-slack-app",
   "dependencies": {
+    "@slack/client": "^3.8.1",
     "express": "^4.14.0",
     "nodemon": "^1.11.0",
     "slack-message-builder": "^1.0.1",
