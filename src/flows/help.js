@@ -3,37 +3,24 @@
 module.exports = (app) => {
   let slapp = app.slapp
 
-  let help = `In or Out is pretty simple. Ask question with the \`/inorout\` command:
+  let help = `Yolk is pretty simple. Ask question with the \`/yolk\` command or direct mention or message me!:
 \`\`\`
-/inorout [type your question here]
-[answer 1]
-[answer 2]
-[...]
+/yolk [type your question here]
 \`\`\`
 
-Up to 15 answers may go on following lines (shift-enter or ctrl-enter or return on mobile).
+I also listen in on conversations in channels and try to learn which questions have been answered!
 
-For example:
-
-\`\`\`
-/inorout What time should we meet?
-10:30AM PST
-2:00PM PST
-:no_entry: never
-\`\`\`
-
-Choose a button option and results are aggregated under the question.
-
-":arrow_heading_down: move to bottom" moves the question down to the bottom of the stream.
-
-Like this! https://goo.gl/ucnthN
+Other possible commands:
+help
+stats
+todo
 `
 
   slapp.command('/yolk', /^\s*help\s*$/, (msg) => {
     msg.respond(help)
   })
 
-  slapp.message('help', ['direct_mention', 'direct_message'], (msg, text) => {
+  slapp.message('(help)', ['direct_mention', 'direct_message'], (msg, text) => {
     msg.say(help)
   })
 
