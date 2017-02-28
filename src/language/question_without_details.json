@@ -1,0 +1,11 @@
+{
+    "text": "_@user is asking_",
+    "attachments": [
+        {
+            "mrkdwn_in": ["text", "pretext", "fields"],
+            "fallback": "Required plain-text summary of the attachment.",
+            "color": "#FDCE2E",
+            "title": "Where is the product sheet?"
+        }
+    ]
+}

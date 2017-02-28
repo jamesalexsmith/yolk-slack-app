@@ -8,6 +8,8 @@ module.exports = (app) => {
   let lang_ask_question_with_details = require('../language/ask_question_with_details.json')
   let lang_cancelled_question = require('../language/cancelled_question.json')
   let lang_add_details_question = require('../language/add_details_question.json')
+  let lang_question_with_details = require('../language/question_with_details.json')
+  let lang_question_without_details = require('../language/question_without_details.json')
 
   function slackAPI(token) {
     return new app.SlackWebClient(token);
@@ -28,7 +30,7 @@ module.exports = (app) => {
   })
 
 
-  slapp.command('/yolk', 'ask (.*) %%% details (.*)', (msg, text, question, details) => {
+  slapp.command('/yolk', 'ask (.*) %%% (.*)', (msg, text, question, details) => {
     var state = {
       question: question,
       details: details
@@ -72,6 +74,10 @@ module.exports = (app) => {
     if (answer === 'cancel') {
       var response = lang_cancelled_question
       response.attachments[0].title = state.question
+      if (state.details !== null) {
+        response.attachments[0].fields[0].value = '```' + state.details + '```'
+      }
+      
       msg.respond(response)
       return
     } 
@@ -79,12 +85,29 @@ module.exports = (app) => {
     else if (answer === 'details') {
       var response = lang_add_details_question
       response.attachments[0].title = 'Add details by typing this in the channel you wish to ask the question in'
-      response.attachments[0].fields[0].value = '```/yolk ask ' + state.question + ' %%% details [YOUR_DETAILS_HERE]```'
+      response.attachments[0].fields[0].value = '```/yolk ask ' + state.question + ' %%% [YOUR_DETAILS_HERE]```'
       msg.respond(response)
     } 
 
     else if (answer === 'post') {
+      var team_name = msg.meta.team_name
+      var user_name = msg.body.user.name
+      var channel_name = msg.body.channel.name
 
+      if (state.details !== null) {
+        var response = lang_question_with_details
+        response.attachments[0].fields[0].value = '```' + state.details + '```'
+      } else {
+        var response = lang_question_without_details
+      }
+
+      response.text = '_Hey ' + team_name + ', @' + user_name + ' has a question for everyone in @channel_\n'
+      response.attachments[0].title = state.question
+      response.attachments[0].callback_id = 'ask_callback'
+
+      msg
+        .respond('_:tada: posting your question to ' + channel_name + '_')
+        .say(response)
     }
 
     // msg.respond(msg.body.response_url, '')
