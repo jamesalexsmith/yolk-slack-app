@@ -1,0 +1,33 @@
+{
+    "text": "_Here's your question so far:_",
+    "attachments": [
+        {
+            "mrkdwn_in": ["text", "pretext", "fields"],
+            "fallback": "Required plain-text summary of the attachment.",
+            "color": "#FDCE2E",
+            "title": "Where is the product sheet?",
+            "fields": [
+                {
+                    "value": "```Do you have any more details you'd like to include?```",
+                    "short": true
+                }
+            ],
+            "actions": [
+                {
+                    "name": "post",
+                    "style": "primary",
+                    "text": "I'm good, post now",
+                    "type": "button",
+                    "value": "post"
+                },
+                {
+                    "name": "cancel",
+                    "style": "danger",
+                    "text": "Cancel",
+                    "type": "button",
+                    "value": "cancel"
+                }
+            ]
+        }
+    ]
+}
