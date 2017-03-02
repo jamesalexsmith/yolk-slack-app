@@ -13,7 +13,9 @@ var slapp = Slapp({
   // Beep Boop sets the SLACK_VERIFY_TOKEN env var
   verify_token: process.env.SLACK_VERIFY_TOKEN,
   convo_store: ConvoStore(),
-  context: Context()  
+  context: Context(),
+  ignoreBots: false,
+  ignoreSelf: false,
 })
 
 // attach Slapp to express server

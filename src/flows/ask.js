@@ -1,4 +1,6 @@
 'use strict'
+const slack = require('slack')
+const messageBuilder = require('slapp/src/message')
 
 module.exports = (app) => {
   let slapp = app.slapp
@@ -60,33 +62,25 @@ module.exports = (app) => {
       .route('ask_confirmation', state)
   })
 
-
   slapp.route('ask_confirmation', (msg, state) => {
-    if (msg.type !== 'action') {
-      msg
-        .respond('Please choose a Yes or No button :wink:')
-        .route('ask_confirmation', state)
-      return
-    }
-
     let answer = msg.body.actions[0].value
 
     if (answer === 'cancel') {
-      var response = lang_cancelled_question
-      response.attachments[0].title = state.question
+      var reply = lang_cancelled_question
+      reply.attachments[0].title = state.question
       if (state.details !== null) {
-        response.attachments[0].fields[0].value = '```' + state.details + '```'
+        reply.attachments[0].fields[0].value = state.details
       }
-      
-      msg.respond(response)
+
+      msg.respond(reply)
       return
     } 
 
     else if (answer === 'details') {
-      var response = lang_add_details_question
-      response.attachments[0].title = 'Add details by typing this in the channel you wish to ask the question in'
-      response.attachments[0].fields[0].value = '```/yolk ask ' + state.question + ' %%% [YOUR_DETAILS_HERE]```'
-      msg.respond(response)
+      var reply = lang_add_details_question
+      reply.attachments[0].title = 'Add details by typing this in the channel you wish to ask the question in'
+      reply.attachments[0].fields[0].value = '```/yolk ask ' + state.question + ' %%% [YOUR_DETAILS_HERE]```'
+      msg.respond(reply)
     } 
 
     else if (answer === 'post') {
@@ -95,50 +89,43 @@ module.exports = (app) => {
       var channel_name = msg.body.channel.name
 
       if (state.details !== null) {
-        var response = lang_question_with_details
-        response.attachments[0].fields[0].value = '```' + state.details + '```'
+        var reply = lang_question_with_details
+        reply.attachments[0].fields[0].value = state.details
       } else {
-        var response = lang_question_without_details
+        var reply = lang_question_without_details
       }
 
-      response.text = '_Hey ' + team_name + ', @' + user_name + ' has a question for everyone in @channel_\n'
-      response.attachments[0].title = state.question
-      response.attachments[0].callback_id = 'ask_callback'
+      reply.text = '_Hey ' + team_name + ', @' + user_name + ' has a question for everyone in @channel!_\n'
+      reply.attachments[0].title = state.question
+      reply.attachments[0].callback_id = 'ask_callback'
 
-      msg
-        .respond('_:tada: posting your question to ' + channel_name + '_')
-        .say(response)
+      msg.respond('_:tada: posting your question to ' + channel_name + '_')
+
+      // Hack to thread the new reply
+      var token = msg.meta.bot_token || msg.meta.app_token
+      var slack = slackAPI(token)
+      var channel_id = msg.meta.channel_id
+      reply.username = 'yolk'
+      reply.as_user = true
+      slack.chat.postMessage(channel_id, reply.text, reply, function(err, res) {
+        if (err) {
+          console.log('Error:', err);
+        } else {
+          var response = res
+
+          // Thread it
+          var data = {username : "yolk", as_user : "true", thread_ts : response.message.ts}
+          slack.chat.postMessage(channel_id, "Please keep the discussion in here to keep the channel tidy!", data, function(err, res) {
+            if (err) {
+              console.log('Error:', err);
+            } else {
+              var response = res
+            }
+          });
+        }
+      });
+
     }
-
-    // msg.respond(msg.body.response_url, '')
-  })
-
-
-  slapp.route('add_details', (msg) => {
-    // respond with a random entry from array
-    msg.say(['Me too', 'Noted', 'That is interesting'])
-  })
-
-  // slapp.route('ask_confirmation', (msg) => {
-  //   msg.say('in ask_confirmation')
-  //   console.log(msg)
-  //   msg.say({
-  //       text: 'Are you sure you want to post this to this channel?',
-  //       attachments: [
-  //         {
-  //           text: '',
-  //           fallback: 'Yes or No?',
-  //           callback_id: 'yesno_callback',
-  //           actions: [
-  //             { name: 'answer', text: 'Yes', type: 'button', value: 'yes' },
-  //             { name: 'answer', text: 'No',  type: 'button',  value: 'no' }
-  //           ]
-  //         }]
-  //       })
-  // })
-
-  slapp.action('yesno_callback', 'answer', (msg, value) => {
-    msg.respond(msg.body.response_url, `${value} is a good choice!`)
   })
 
   return {}
