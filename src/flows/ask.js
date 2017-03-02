@@ -95,11 +95,14 @@ module.exports = (app) => {
         var reply = lang_question_without_details
       }
 
-      reply.text = '_Hey ' + team_name + ', @' + user_name + ' has a question for everyone in @channel!_\n'
-      reply.attachments[0].title = state.question
+      msg.respond({delete_original: true})
+
+      // reply.text = '_hey ' + team_name + ', @' + user_name + ' has a question for everyone in @channel!_\n'
+      reply.text = ''
+      reply.attachments[0].title = 'Hey ' + team_name + ', @' + user_name + ' has a question: \n ' + state.question
       reply.attachments[0].callback_id = 'ask_callback'
 
-      msg.respond('_:tada: posting your question to ' + channel_name + '_')
+      // msg.say('_Hey ' + team_name + ', @' + user_name + ' has a question for everyone in @channel!_\n')
 
       // Hack to thread the new reply
       var token = msg.meta.bot_token || msg.meta.app_token
@@ -114,8 +117,14 @@ module.exports = (app) => {
           var response = res
 
           // Thread it
-          var data = {username : "yolk", as_user : "true", thread_ts : response.message.ts}
-          slack.chat.postMessage(channel_id, "Please keep the discussion in here to keep the channel tidy!", data, function(err, res) {
+          var data = {
+            username : "yolk",
+            as_user : "true",
+            thread_ts : response.message.ts,
+            reply_broadcast : true
+          }
+
+          slack.chat.postMessage(channel_id, 'Click me to answer!', data, function(err, res) {
             if (err) {
               console.log('Error:', err);
             } else {
@@ -124,8 +133,11 @@ module.exports = (app) => {
           });
         }
       });
-
     }
+  })
+
+  slapp.action('ask_callback', 'answer', (msg, text) => {
+    console.log(msg)
   })
 
   return {}
