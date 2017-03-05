@@ -82,6 +82,20 @@ module.exports = (app) => {
     return attachment.title.match('@(.+?(?=\\s))')[0].substr(1)
   }
 
+  function reactAsBot(reaction, msg) {
+    // Add thumbs up and down to everything that's not our bot
+    let reactionOptions = {
+      token: msg.meta.bot_token,
+      timestamp: msg.body.event.ts,
+      name: reaction,
+      channel: msg.body.event.channel
+    }
+
+    slapp.client.reactions.add(reactionOptions, (err) => {
+      if (err) console.log('Error adding reaction', err)
+    })
+  }
+
 
   slapp.message('(.*)', (msg, text) => {
 
@@ -113,27 +127,8 @@ module.exports = (app) => {
 
 
           // Add thumbs up and down to everything that's not our bot
-          let thumbs_up = {
-            token: msg.meta.bot_token,
-            timestamp: msg.body.event.ts,
-            name: "+1",
-            channel: msg.body.event.channel
-          }
-
-          let thumbs_down = {
-            token: msg.meta.bot_token,
-            timestamp: msg.body.event.ts,
-            name: "-1",
-            channel: msg.body.event.channel
-          }
-
-          slapp.client.reactions.add(thumbs_up, (err) => {
-            if (err) console.log('Error adding reaction', err)
-          })
-
-          slapp.client.reactions.add(thumbs_down, (err) => {
-            if (err) console.log('Error adding reaction', err)
-          })
+          reactAsBot('+1', msg)
+          reactAsBot('-1', msg)
         }
       }
     }
