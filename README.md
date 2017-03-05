@@ -2,7 +2,7 @@
 
 Push as alex: `GIT_SSH_COMMAND="ssh -i ~/.ssh/alex_id_rsa" git push`
 `nodemon ./server.js localhost 4000` to start local development
-`ngrok` for local development
+`ngrok http 4000` for local development
 
 # starter-slapp-app
 
