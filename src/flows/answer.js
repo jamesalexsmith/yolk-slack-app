@@ -4,23 +4,61 @@ module.exports = (app) => {
   let slapp = app.slapp
   var request = require("request");
   var rp = require('request-promise');
+  var lang_notify_comments = require('../language/answer/notify_comments.json')
 
-  function sortByLikes(messages) {
-
-  }
-
-  function getAllRepliesOptions(msg) {
-    return {
-      method: 'GET',
-      url: 'https://slack.com/api/channels.replies',
-      qs: {
-        token: msg.meta.app_token,
-        channel: msg.body.event.channel,
-        thread_ts: msg.body.event.thread_ts
-      },
-      json: true
+  function getTodaysMessages(threadedMessages) {
+    let todaysMessages = []
+    let todaysDate = new Date()
+    for (var i = 0; i < threadedMessages.length; i++) {
+      let messageDate = new Date(threadedMessages[i].ts * 1000);
+      if(todaysDate.setHours(0,0,0,0) == messageDate.setHours(0,0,0,0)) {
+        todaysMessages.push(threadedMessages[i])
+      }
     }
+
+    return todaysMessages
   }
+
+  function getUsernamesFromMessages(todaysMessages, users) {
+    let usernames = []
+    todaysMessages.forEach(function(message_element) {
+      users.forEach(function(user_element) {
+        if (message_element.user === user_element.id) {
+          usernames.push(user_element.name)
+        }
+      }, this);
+    }, this);
+
+    return usernames
+  }
+
+  function generateNotificationAttachment(threadedMessages, msg, users, asker_username) {
+    let todaysMessages = getTodaysMessages(threadedMessages)
+    let todaysUsernames = getUsernamesFromMessages(todaysMessages, users)
+    
+    console.log(msg)
+    console.log(threadedMessages)
+
+    let attachment = lang_notify_comments
+    attachment.text = '_Hey ' + asker_username + ', there\'s been activity on your question!'
+    // attachment.attachments[0].title = 
+
+    // console.log(threadedMessages)
+
+    slapp.action('answers_callback', 'show', 'show', (msg, text) => {
+
+    })
+
+    slapp.action('answers_callback', 'accept', 'accept', (msg, text) => {
+
+    })
+
+    slapp.action('answers_callback', 'dismiss', 'dismiss', (msg, text) => {
+
+    })
+    return 'testtstst'
+  }
+
 
   function deleteFirstHelperMessage(msg, helperMessage) {
     let delete_request = {
@@ -44,7 +82,7 @@ module.exports = (app) => {
     return latest_msg_date > prev_msg_date
   }
 
-  function messageAsker(msg, asker_username) {
+  function messageAsker(msg, asker_username, threadedMessages) {
     // Get users to find asker user id
     slapp.client.users.list({token: msg.meta.app_token}, (err, data) => {
       if (err) console.log('Error fetching users', err)
@@ -63,14 +101,14 @@ module.exports = (app) => {
       }
       slapp.client.im.open(imOptions, (err, data) => {
         if (err) console.log('Error opening im with asker', err)
-        let im_id = data.channel.id
 
         // Message asker
         let msgOptions = {
           token: msg.meta.bot_token,
-          channel: im_id,
-          text: 'test',
+          channel: data.channel.id,
+          text: generateNotificationAttachment(threadedMessages, msg, users, asker_username)
         }
+
         slapp.client.chat.postMessage(msgOptions, (err, data) => {
           if (err) console.log('Error messaging asker', err)
         })
@@ -104,7 +142,18 @@ module.exports = (app) => {
       if (msg.body.event.parent_user_id === msg.meta.bot_user_id) {
         if (msg.body.event.user !== msg.meta.bot_user_id) {
 
-          rp(getAllRepliesOptions(msg))
+          let repliesOptions = {
+            method: 'GET',
+            url: 'https://slack.com/api/channels.replies',
+            qs: {
+              token: msg.meta.app_token,
+              channel: msg.body.event.channel,
+              thread_ts: msg.body.event.thread_ts
+            },
+            json: true
+          }
+
+          rp(repliesOptions)
             .then(function (body) {
               let threadedMessages = body.messages
 
@@ -113,11 +162,14 @@ module.exports = (app) => {
                 deleteFirstHelperMessage(msg, threadedMessages[1])
               }
 
+              let asker_username = getAskerUsername(threadedMessages[0].attachments[0])
+              messageAsker(msg, asker_username, threadedMessages) // FOR TESTING
+
               // If first message of day
               if (shouldNotifyAsker(threadedMessages)) {
                 // Notify asker of new activity
                 let asker_username = getAskerUsername(threadedMessages[0].attachments[0])
-                messageAsker(msg, asker_username)
+                messageAsker(msg, asker_username, threadedMessages)
               }
             })
 
