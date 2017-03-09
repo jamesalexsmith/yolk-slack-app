@@ -7,11 +7,9 @@
             "color": "#FDCE2E",
             "title": "Who let the dogs out?",
             "title_link": "https://api.slack.com/",
-            "text": "I had a samoyed, pug, and a shiba. Where did they go?",
             "fields": [
                 {
-                    "title": "2 new comments",
-                    "value": "@vitaly, @sam, @felix, @rick"
+                    "title": "2 new comments"
                 }
             ],
             "image_url": "http://my-website.com/path/to/image.jpg",

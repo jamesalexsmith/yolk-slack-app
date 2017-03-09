@@ -19,31 +19,76 @@ module.exports = (app) => {
     return todaysMessages
   }
 
-  function getUsernamesFromMessages(todaysMessages, usersList) {
+  function getUsernamesAndIdsFromMessages(todaysMessages, usersList) {
+    // Return user ids and names of unique users
     let todaysUsernames = []
     for (var i = 0; i < todaysMessages.length; i++) {
-      for (var j = 0; j < users.length; j++) {
-        if (todaysMessages[i].user === users[j].id) {
-            todaysUsernames.push(users[j].name)
-          }
+      for (var j = 0; j < usersList.length; j++) {
+        if (todaysMessages[i].user === usersList[j].id) {
+          todaysUsernames.push(usersList[j].name)
+        }
+      }
+    }
+
+    todaysUsernames = [...new Set(todaysUsernames)]
+
+    let todaysUsernamesAndIds = []
+    for (var i = 0; i < todaysUsernames.length; i++) {
+      for (var j = 0; j < usersList.length; j++) {
+        if (todaysUsernames[i] === usersList[j].name) {
+          todaysUsernamesAndIds.push([usersList[j].id, usersList[j].name])
+        }
       }
     }
     
-    return todaysUsernames
+    return todaysUsernamesAndIds
+  }
+
+  function getStringOfMentions(todaysUsernamesAndIds) {
+    let string = ''
+    for (var i = 0; i < todaysUsernamesAndIds.length && i < 3; i++) {
+      string += '@' + todaysUsernamesAndIds[i][1] + ', '
+    }
+
+    string = string.slice(0, -2)
+
+    if (todaysUsernamesAndIds.length > 3) {
+      string += ' and ' + todaysUsernamesAndIds.length - 3 + 'others!'
+    } else {
+      string += '!'
+    }
+
+    return string
+  }
+
+  function getMessageLink(msg, timestamp) {
+    // https://yolkhq.slack.com/archives/testing/p1489077688000178
+    let parsedTimestamp = timestamp.replace('.', '')
+    return 'https://' + msg.meta.team_domain + '.slack.com/archives/' +  msg.meta.channel_name + '/p' + parsedTimestamp
+  }
+
+  function getUsername(message, usersList) {
+    console.log(message)
+    console.log(usersList)
+    for (var i = 0; i < usersList.length; i++) {
+      if (usersList[i].id === message.user) {
+        return usersList[i].name
+      }      
+    }
   }
 
   function generateNotificationAttachment(threadedMessages, msg, usersList, asker_username) {
     let todaysMessages = getTodaysMessages(threadedMessages)
-    let todaysUsernames = getUsernamesFromMessages(todaysMessages, usersList)
-    
-    console.log(msg)
-    console.log(threadedMessages)
+    let todaysUsernamesAndIds = getUsernamesAndIdsFromMessages(todaysMessages, usersList)
 
     let attachment = lang_notify_comments
-    attachment.text = '_Hey ' + asker_username + ', there\'s been activity on your question!'
-    // attachment.attachments[0].title = 
-
-    // console.log(threadedMessages)
+    attachment.text = '_Hey ' + asker_username + ', there\'s been activity on your question!_'
+    attachment.attachments[0].title = getQuestionText(threadedMessages[0].attachments[0])
+    attachment.attachments[0].title_link = getMessageLink(msg, threadedMessages[0].ts)
+    let numMessages = todaysMessages.length
+    attachment.attachments[0].fields[0].title = numMessages + ' new comments by ' + getStringOfMentions(todaysUsernamesAndIds)
+    attachment.attachments[0].footer = 'Last commented by ' + getUsername(todaysMessages[todaysMessages.length-1], usersList) 
+    attachment.attachments[0].ts = todaysMessages[todaysMessages.length-1].ts
 
     slapp.action('answers_callback', 'show', 'show', (msg, text) => {
 
@@ -56,7 +101,7 @@ module.exports = (app) => {
     slapp.action('answers_callback', 'dismiss', 'dismiss', (msg, text) => {
 
     })
-    return 'testtstst'
+    return attachment
   }
 
 
@@ -83,42 +128,59 @@ module.exports = (app) => {
   }
 
   function messageAsker(msg, asker_username, threadedMessages) {
-    // Get users to find asker user id
-    slapp.client.users.list({token: msg.meta.app_token}, (err, userData) => {
-      if (err) console.log('Error fetching users', err)
-      let users = userData.members
-      for (let i = 0, len = users.length; i < len; i++) {
-        if (users[i].name === asker_username) {
-          var user_id = users[i].id
-          break
+
+    // Get the channe lname for linking question
+    let channelOptions = {
+      token: msg.meta.app_token, 
+      channel: msg.meta.channel_id
+    }
+    slapp.client.channels.info(channelOptions, (err, channelData) => {
+      if (err) console.log('Error fetching channel info', err)
+      msg.meta.channel_name = channelData.channel.name
+
+      // Get users to find asker user id
+      slapp.client.users.list({token: msg.meta.app_token}, (err, userData) => {
+        if (err) console.log('Error fetching users', err)
+        let users = userData.members
+
+        for (let i = 0, len = users.length; i < len; i++) {
+          if (users[i].name === asker_username) {
+            var user_id = users[i].id
+            break
+          }
         }
-      }
 
-      // Open IM with asker
-      let imOptions = {
-        token: msg.meta.bot_token,
-        user: user_id
-      }
-      slapp.client.im.open(imOptions, (err, imData) => {
-        if (err) console.log('Error opening im with asker', err)
-
-        // Message asker
-        let msgOptions = {
+        // Open IM with asker
+        let imOptions = {
           token: msg.meta.bot_token,
-          channel: imData.channel.id,
-          text: 'test'
-          // text: generateNotificationAttachment(threadedMessages, msg, users, asker_username)
+          user: user_id
         }
+        slapp.client.im.open(imOptions, (err, imData) => {
+          if (err) console.log('Error opening im with asker', err)
 
-        slapp.client.chat.postMessage(msgOptions, (err, data) => {
-          if (err) console.log('Error messaging asker', err)
+          // Message asker
+          let reply = generateNotificationAttachment(threadedMessages, msg, users, asker_username)
+          let msgOptions = {
+            token: msg.meta.bot_token,
+            channel: imData.channel.id,
+            text: reply.text,
+            attachments: reply.attachments
+          }
+
+          slapp.client.chat.postMessage(msgOptions, (err, postData) => {
+            if (err) console.log('Error messaging asker', err)
+          })
         })
       })
     })
   }
 
   function getAskerUsername(attachment) {
-    return attachment.title.match('@(.+?(?=\\s))')[0].substr(1)
+    return attachment.title.match('@(.+?(?=\\|))')[0].substr(1)
+  }
+
+  function getQuestionText(attachment) {
+    return attachment.title.match('has a question: \\n(.*)')[1]
   }
 
   function reactAsBot(reaction, msg) {
@@ -169,8 +231,8 @@ module.exports = (app) => {
               // If first message of day
               if (shouldNotifyAsker(threadedMessages)) {
                 // Notify asker of new activity
-                // let asker_username = getAskerUsername(threadedMessages[0].attachments[0])
-                // messageAsker(msg, asker_username, threadedMessages)
+                let asker_username = getAskerUsername(threadedMessages[0].attachments[0])
+                messageAsker(msg, asker_username, threadedMessages)
               }
             })
 
