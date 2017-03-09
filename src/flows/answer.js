@@ -19,22 +19,22 @@ module.exports = (app) => {
     return todaysMessages
   }
 
-  function getUsernamesFromMessages(todaysMessages, users) {
-    let usernames = []
-    todaysMessages.forEach(function(message_element) {
-      users.forEach(function(user_element) {
-        if (message_element.user === user_element.id) {
-          usernames.push(user_element.name)
-        }
-      }, this);
-    }, this);
-
-    return usernames
+  function getUsernamesFromMessages(todaysMessages, usersList) {
+    let todaysUsernames = []
+    for (var i = 0; i < todaysMessages.length; i++) {
+      for (var j = 0; j < users.length; j++) {
+        if (todaysMessages[i].user === users[j].id) {
+            todaysUsernames.push(users[j].name)
+          }
+      }
+    }
+    
+    return todaysUsernames
   }
 
-  function generateNotificationAttachment(threadedMessages, msg, users, asker_username) {
+  function generateNotificationAttachment(threadedMessages, msg, usersList, asker_username) {
     let todaysMessages = getTodaysMessages(threadedMessages)
-    let todaysUsernames = getUsernamesFromMessages(todaysMessages, users)
+    let todaysUsernames = getUsernamesFromMessages(todaysMessages, usersList)
     
     console.log(msg)
     console.log(threadedMessages)
@@ -66,7 +66,7 @@ module.exports = (app) => {
       ts: helperMessage.ts,
       channel: msg.body.event.channel
     }
-    slapp.client.chat.delete(delete_request, (err, data) => {
+    slapp.client.chat.delete(delete_request, (err, deleteData) => {
       if (err) console.log('Error deleting helper message', err)
     })
   }
@@ -84,9 +84,9 @@ module.exports = (app) => {
 
   function messageAsker(msg, asker_username, threadedMessages) {
     // Get users to find asker user id
-    slapp.client.users.list({token: msg.meta.app_token}, (err, data) => {
+    slapp.client.users.list({token: msg.meta.app_token}, (err, userData) => {
       if (err) console.log('Error fetching users', err)
-      let users = data.members
+      let users = userData.members
       for (let i = 0, len = users.length; i < len; i++) {
         if (users[i].name === asker_username) {
           var user_id = users[i].id
@@ -99,14 +99,15 @@ module.exports = (app) => {
         token: msg.meta.bot_token,
         user: user_id
       }
-      slapp.client.im.open(imOptions, (err, data) => {
+      slapp.client.im.open(imOptions, (err, imData) => {
         if (err) console.log('Error opening im with asker', err)
 
         // Message asker
         let msgOptions = {
           token: msg.meta.bot_token,
-          channel: data.channel.id,
-          text: generateNotificationAttachment(threadedMessages, msg, users, asker_username)
+          channel: imData.channel.id,
+          text: 'test'
+          // text: generateNotificationAttachment(threadedMessages, msg, users, asker_username)
         }
 
         slapp.client.chat.postMessage(msgOptions, (err, data) => {
@@ -168,8 +169,8 @@ module.exports = (app) => {
               // If first message of day
               if (shouldNotifyAsker(threadedMessages)) {
                 // Notify asker of new activity
-                let asker_username = getAskerUsername(threadedMessages[0].attachments[0])
-                messageAsker(msg, asker_username, threadedMessages)
+                // let asker_username = getAskerUsername(threadedMessages[0].attachments[0])
+                // messageAsker(msg, asker_username, threadedMessages)
               }
             })
 

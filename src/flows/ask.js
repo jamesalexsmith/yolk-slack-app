@@ -84,9 +84,8 @@ module.exports = (app) => {
     } 
 
     else if (answer === 'post') {
-      var team_name = msg.meta.team_name
-      var user_name = msg.body.user.name
-      var channel_name = msg.body.channel.name
+      var userMention = '<@' + msg.body.user.name + '|' + msg.body.user.id + '>'
+      var channelMention = '<!channel|channel>'
 
       if (state.details !== null) {
         var reply = lang_question_with_details
@@ -97,12 +96,10 @@ module.exports = (app) => {
 
       msg.respond({delete_original: true})
 
-      // reply.text = '_hey ' + team_name + ', @' + user_name + ' has a question for everyone in @channel!_\n'
       reply.text = ''
-      reply.attachments[0].title = 'Hey ' + team_name + ', @' + user_name + ' has a question: \n ' + state.question
+      reply.attachments[0].title = 'Hey ' + channelMention + ', ' + userMention + ' has a question: \n ' + state.question
       reply.attachments[0].callback_id = 'ask_callback'
 
-      // msg.say('_Hey ' + team_name + ', @' + user_name + ' has a question for everyone in @channel!_\n')
 
       // Hack to thread the new reply
       var token = msg.meta.bot_token || msg.meta.app_token
