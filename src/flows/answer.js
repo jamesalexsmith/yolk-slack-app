@@ -86,7 +86,6 @@ module.exports = (app) => {
 			let formattedPagination = createFormattedPagination(paginatedMessages[i])
 			formattedPagination.push(generateNavigationButtons(i, paginatedMessages.length))
 			paginatedAnswers.push(formattedPagination)
-			console.log(createFormattedPagination)
 		}
 
 		return paginatedAnswers
