@@ -6,6 +6,7 @@ module.exports = (app) => {
     help: require('./help')(app),
     ask: require('./ask')(app),
     search: require('./search')(app),
-    answer: require('./answer')(app)
+    answer: require('./answer')(app),
+    notify_updates: require('./notify_updates')(app)
   }
 }
