@@ -304,17 +304,17 @@ module.exports = (app) => {
   }
 
   function generateNavigationButtons(index, length) {
-    let navigation = lang_navigate_answers
+    let navigation = JSON.parse(JSON.stringify(lang_navigate_answers))
     if (index === 0) {
-      navigation.actions.push(lang_next_button)
+      navigation.actions.push(JSON.parse(JSON.stringify(lang_next_button)))
     } else if (index == length - 1) {
-      navigation.actions.push(lang_previous_button)
-      navigation.actions.push(lang_next_button)
+      navigation.actions.push(JSON.parse(JSON.stringify(lang_previous_button)))
     } else {
-      navigation.actions.push(lang_previous_button)
+      navigation.actions.push(JSON.parse(JSON.stringify(lang_previous_button)))
+      navigation.actions.push(JSON.parse(JSON.stringify(lang_next_button)))
     }
 
-    return JSON.parse(JSON.stringify(navigation))
+    return navigation
   }
 
   function generateFormattedPaginations(paginatedMessages) {
@@ -375,27 +375,35 @@ module.exports = (app) => {
 
   slapp.route('process_notification', (msg, state) => {
     let option = msg.body.actions[0].value
-    console.log(option)
-    console.log(state)
+    let reply = lang_select_answer
+    reply.attachments = state.paginations[state.pagination_index]
+    
+    if (option === 'accept') {
+      console.log('TODOOO')
+      msg.route('process_notification', state)
+    }
 
-    if (option === 'next') {
-
+    else if (option === 'next') {
+      reply.attachments = state.paginations[state.pagination_index + 1]
+      state.pagination_index += 1
     } 
     
     else if (option === 'previous') {
-
+      reply.attachments = state.paginations[state.pagination_index - 1]
+      state.pagination_index -= 1
     }
 
-    else if (option === 'accept') {
+    msg
+      .respond(reply)
+      .route('process_notification', state)
 
-    }
   })
 
-  function nextAnswer(msg, state) {
+  function nextPage(msg, state) {
 
   }
 
-  function acceptAnswer(msg, state) {
+  function acceptPage(msg, state) {
 
   }
 
