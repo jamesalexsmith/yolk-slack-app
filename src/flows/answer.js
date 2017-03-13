@@ -5,6 +5,9 @@ module.exports = (app) => {
   var request = require("request");
   var rp = require('request-promise');
   var lang_notify_comments = require('../language/answer/notify_comments.json')
+  var lang_select_answer = require('../language/answer/select_answer.json')
+  var lang_accept_answer = require('../language/answer/accept_answer.json')
+  var lang_navigate_answers = require('../language/answer/navigate_answers.json')
 
   function getTodaysMessages(threadedMessages) {
     let todaysMessages = []
@@ -68,8 +71,6 @@ module.exports = (app) => {
   }
 
   function getUsername(message, usersList) {
-    console.log(message)
-    console.log(usersList)
     for (var i = 0; i < usersList.length; i++) {
       if (usersList[i].id === message.user) {
         return usersList[i].name
@@ -90,17 +91,6 @@ module.exports = (app) => {
     attachment.attachments[0].footer = 'Last commented by ' + getUsername(todaysMessages[todaysMessages.length-1], usersList) 
     attachment.attachments[0].ts = todaysMessages[todaysMessages.length-1].ts
 
-    slapp.action('answers_callback', 'show', 'show', (msg, text) => {
-
-    })
-
-    slapp.action('answers_callback', 'accept', 'accept', (msg, text) => {
-
-    })
-
-    slapp.action('answers_callback', 'dismiss', 'dismiss', (msg, text) => {
-
-    })
     return attachment
   }
 
@@ -155,6 +145,7 @@ module.exports = (app) => {
           token: msg.meta.bot_token,
           user: user_id
         }
+
         slapp.client.im.open(imOptions, (err, imData) => {
           if (err) console.log('Error opening im with asker', err)
 
@@ -248,6 +239,150 @@ module.exports = (app) => {
       }
     }
   })
+
+
+  function getTimestampOfQuestion(link) {
+    let string = link.match('\\/p[0-9]*').slice(-1)[0].substr(2)
+    string = string.slice(0, -6) + '.' + string.slice(-6, string.length)
+    return string
+  }
+
+  function getChannelNameOfQuestion(link) {
+    return link.match('archives\\/(.*)\\/p[0-9]*')[1]
+  }
+
+  function getChannelIdByName(channels, channelName) {
+    for (var i = 0; i < channels.length; i++) {
+      if (channelName == channels[i].name) {
+        return channels[i].id
+      }      
+    }
+  }
+
+  function createPagination(threadedMessages) {
+    let paginatedMessages = []
+
+    for (var i = 0; i < threadedMessages.length; i+=3) {
+      paginatedMessages.push(threadedMessages.slice(i, i+3))
+    }
+    return paginatedMessages
+  }
+
+  function getNumReactions(reactions, reaction_type) {
+    if (reactions === undefined) return 0
+    for (var i = 0; i < reactions.length; i++) {
+      if (reactions[i].name === reaction_type) {
+        return reactions[i].count
+      }
+    }
+    return 0
+  }
+
+  function formatAcceptAnswer(paginatedMessage) {
+    let formattedAcceptAnswer = lang_accept_answer
+    formattedAcceptAnswer.title = '<@' + paginatedMessage.user + '>'
+    formattedAcceptAnswer.text = paginatedMessage.text
+    if (paginatedMessage.attachments) formattedAcceptAnswer.attachments = paginatedMessage.attachments
+    formattedAcceptAnswer.fields = [
+      {
+        "title": ':+1: ' + getNumReactions(paginatedMessage.reactions, '+1') + '   :-1: ' + getNumReactions(paginatedMessage.reactions, '-1')
+      }
+    ]
+    return formattedAcceptAnswer
+  }
+
+  function createFormattedPagination(pagination) {
+    let answers = []
+    pagination.forEach(function(paginatedMessage) {
+      // Need to create a new instance
+      answers.push(JSON.parse(JSON.stringify(formatAcceptAnswer(paginatedMessage))))
+    }, this);
+    answers.push(lang_navigate_answers)
+    return answers
+  }
+
+  function generateFormattedPaginations(paginatedMessages) {
+    let paginatedAnswers = []
+    paginatedMessages.forEach(function(pagination) {
+      paginatedAnswers.push(createFormattedPagination(pagination))
+    }, this);
+
+    return paginatedAnswers
+  }
+
+  slapp.action('answers_callback', 'show', 'show', (msg, text) => {
+    let channelName = getChannelNameOfQuestion(msg.body.original_message.attachments[0].title_link)
+    
+    slapp.client.channels.list({token: msg.meta.app_token}, (err, channelData) => {
+      let channelId = getChannelIdByName(channelData.channels, channelName)
+      let repliesOptions = {
+        method: 'GET',
+        url: 'https://slack.com/api/channels.replies',
+        qs: {
+          token: msg.meta.app_token,
+          channel: channelId,
+          thread_ts: getTimestampOfQuestion(msg.body.original_message.attachments[0].title_link)
+        },
+        json: true
+      }
+
+      rp(repliesOptions)
+        .then(function (body) {
+          let threadedMessages = body.messages
+          let paginatedMessages = createPagination(threadedMessages.slice(1, threadedMessages.length))
+          let formattedPaginatedMessages = generateFormattedPaginations(paginatedMessages)
+          let reply = lang_select_answer
+
+          reply.attachments = formattedPaginatedMessages[0]
+
+          var state = {
+            "pagination_index": 0,
+            "paginations": formattedPaginatedMessages,
+            "threaded_messages": threadedMessages,
+            "channel_name": channelName,
+            "channel_id": channelId
+          }
+
+          msg
+            .respond(reply)
+            .route('process_notification', state)
+
+          
+          // console.log('here')
+          // msg.route('process_notification', state)
+        })
+    })
+  })
+
+  slapp.route('process_notification', (msg, state) => {
+    let option = msg.body.actions[0].value
+    console.log(option)
+    console.log(state)
+
+    if (option === 'next') {
+
+    } 
+    
+    else if (option === 'previous') {
+
+    }
+
+    else if (option === 'accept') {
+
+    }
+  })
+
+  function nextAnswer(msg, state) {
+
+  }
+
+  function acceptAnswer(msg, state) {
+
+  }
+
+  function acceptAnswer(msg, state) {
+
+  }
 
   return {}
 }

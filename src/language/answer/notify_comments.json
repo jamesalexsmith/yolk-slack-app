@@ -21,15 +21,8 @@
                     "text": "Show me!",
                     "type": "button",
                     "value": "show"
-                },
-                {
-                    "name": "dismiss",
-                    "style": "danger",
-                    "text": "Dismiss",
-                    "type": "button",
-                    "value": "dismiss"
                 }
-                ],
+            ],
             "footer": "Last commented by @rick"
         }
     ]

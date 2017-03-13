@@ -1,31 +1,4 @@
 {
     "text": "_Is there an answer you can accept?_",
-    "attachments": [
-        {
-            "callback_id": "answers_callback",
-            "fallback": "Required plain-text summary of the attachment.",
-            "color": "#FDCE2E",
-            "title": "",
-            "title_link": "https://api.slack.com/",
-            "text": "Not what you're looking for?",
-            "image_url": "http://my-website.com/path/to/image.jpg",
-            "thumb_url": "http://example.com/path/to/thumb.png",
-            "actions": [
-                {
-                    "name": "show",
-                    "style": "primary",
-                    "text": "Show me more!",
-                    "type": "button",
-                    "value": "show"
-                },
-                {
-                    "name": "dismiss",
-                    "style": "danger",
-                    "text": "Dismiss",
-                    "type": "button",
-                    "value": "dismiss"
-                }
-            ]
-        }
-    ]
+    "attachments": []
 }
