@@ -8,6 +8,9 @@ module.exports = (app) => {
   var lang_select_answer = require('../language/answer/select_answer.json')
   var lang_accept_answer = require('../language/answer/accept_answer.json')
   var lang_navigate_answers = require('../language/answer/navigate_answers.json')
+  var lang_next_button = require('../language/answer/next_button.json')
+  var lang_previous_button = require('../language/answer/previous_button.json')
+
 
   function getTodaysMessages(threadedMessages) {
     let todaysMessages = []
@@ -297,15 +300,31 @@ module.exports = (app) => {
       // Need to create a new instance
       answers.push(JSON.parse(JSON.stringify(formatAcceptAnswer(paginatedMessage))))
     }, this);
-    answers.push(lang_navigate_answers)
     return answers
+  }
+
+  function generateNavigationButtons(index, length) {
+    let navigation = lang_navigate_answers
+    if (index === 0) {
+      navigation.actions.push(lang_next_button)
+    } else if (index == length - 1) {
+      navigation.actions.push(lang_previous_button)
+      navigation.actions.push(lang_next_button)
+    } else {
+      navigation.actions.push(lang_previous_button)
+    }
+
+    return JSON.parse(JSON.stringify(navigation))
   }
 
   function generateFormattedPaginations(paginatedMessages) {
     let paginatedAnswers = []
-    paginatedMessages.forEach(function(pagination) {
-      paginatedAnswers.push(createFormattedPagination(pagination))
-    }, this);
+    for (var i = 0; i < paginatedMessages.length; i++) {
+      let formattedPagination = createFormattedPagination(paginatedMessages[i])
+      formattedPagination.push(generateNavigationButtons(i, paginatedMessages.length))
+      paginatedAnswers.push(formattedPagination)
+      console.log(createFormattedPagination)
+    }
 
     return paginatedAnswers
   }
