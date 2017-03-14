@@ -136,9 +136,19 @@ module.exports = (app) => {
 	})
 
 	slapp.route('process_notification', (msg, state) => {
-		let option = msg.body.actions[0].value
 		let reply = lang_select_answer
 		reply.attachments = state.paginations[state.pagination_index]
+
+		if (msg.type !== 'action') {	
+			// If message has text, go to search, then route back
+			// TODO
+			msg
+				.respond(reply)
+				.route('process_notification', state)
+			return
+		}
+
+		let option = msg.body.actions[0].value
 
 		if (option === 'accept') {
 			console.log('TODOOO')

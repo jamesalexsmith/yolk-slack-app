@@ -115,7 +115,7 @@ module.exports = (app) => {
 
     function messageAsker(msg, asker_username, threadedMessages) {
 
-        // Get the channe lname for linking question
+        // Get the channel name for linking question
         let channelOptions = {
             token: msg.meta.app_token,
             channel: msg.meta.channel_id
@@ -199,7 +199,6 @@ module.exports = (app) => {
 
 
     slapp.message('(.*)', (msg, text) => {
-
         // If message occurred in a threaded yolk question
         if (msg.body.event.thread_ts !== undefined) {
             if (msg.body.event.parent_user_id === msg.meta.bot_user_id) {
