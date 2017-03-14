@@ -7,6 +7,7 @@ module.exports = (app) => {
 	var lang_navigate_answers = require('../language/answer/navigate_answers.json')
 	var lang_next_button = require('../language/answer/next_button.json')
 	var lang_previous_button = require('../language/answer/previous_button.json')
+	var lang_accepted_notification = require('../language/answer/accepted_notification.json')
 	var rp = require('request-promise')
 
 	function getTimestampOfQuestion(link) {
@@ -50,6 +51,7 @@ module.exports = (app) => {
 		let formattedAcceptAnswer = lang_accept_answer
 		formattedAcceptAnswer.title = '<@' + paginatedMessage.user + '>'
 		formattedAcceptAnswer.text = paginatedMessage.text
+		formattedAcceptAnswer.actions[0].value = JSON.stringify(paginatedMessage) // Pass along the message
 		if (paginatedMessage.attachments) formattedAcceptAnswer.attachments = paginatedMessage.attachments
 		formattedAcceptAnswer.fields = [{
 			"title": ':+1: ' + getNumReactions(paginatedMessage.reactions, '+1') + '   :-1: ' + getNumReactions(paginatedMessage.reactions, '-1')
@@ -148,10 +150,13 @@ module.exports = (app) => {
 			return
 		}
 
-		let option = msg.body.actions[0].value
+		let option = msg.body.actions[0].name
 
 		if (option === 'accept') {
-			console.log('TODOOO')
+			// console.log(msg.body.actions)
+			// console.log(JSON.parse(msg.body.actions[0].value))
+			// console.log(msg, msg.body.actions, state.threaded_messages[0])
+			acceptAnswer(msg, state.channel_id, JSON.parse(msg.body.actions[0].value))
 			msg.route('process_notification', state)
 		} else if (option === 'next') {
 			reply.attachments = state.paginations[state.pagination_index + 1]
@@ -167,16 +172,26 @@ module.exports = (app) => {
 
 	})
 
-	function nextPage(msg, state) {
+	function acceptAnswer(msg, channel_id, acceptedMessage) {
+		let reply = lang_accepted_notification
+		reply.text = "_ <@" + msg.meta.user_id + '> has accepted a response!_'
+		reply.attachments[0].title = acceptedMessage.text
+		reply.attachments[0].fields[0].value = '<@' + acceptedMessage.user + '>'
+		reply.attachments[0].ts = Math.floor(new Date() / 1000)
 
-	}
+		let msgOptions = {
+			token: msg.meta.bot_token,
+			channel: channel_id,
+			text: reply.text,
+			attachments: reply.attachments,
+			thread_ts: acceptedMessage.thread_ts,
+			reply_broadcast: true,
+			as_user: true
+		}
 
-	function acceptPage(msg, state) {
-
-	}
-
-	function acceptAnswer(msg, state) {
-
+		slapp.client.chat.postMessage(msgOptions, (err, postData) => {
+			if (err) console.log('Error posting accepted answer', err)
+		})
 	}
 
 	return {}
