@@ -86,6 +86,7 @@ module.exports = (app) => {
 			reply.text = ''
 			reply.attachments[0].title = 'Hey ' + channelMention + ', ' + userMention + ' has a question: \n ' + state.question
 			reply.attachments[0].callback_id = 'ask_callback'
+			reply.attachments[0].ts = Math.floor(new Date() / 1000)
 
 
 			// Hack to thread the new reply
