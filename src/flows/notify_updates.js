@@ -75,13 +75,16 @@ module.exports = (app) => {
     }
 
     function generateNotificationAttachment(threadedMessages, msg, usersList, asker_username) {
-        let todaysMessages = getTodaysMessages(threadedMessages)
-        let todaysUsernamesAndIds = getUsernamesAndIdsFromMessages(todaysMessages, usersList)
 
         let attachment = lang_notify_comments
         attachment.text = '_Hey ' + asker_username + ', there\'s been activity on your question!_'
         attachment.attachments[0].title = getQuestionText(threadedMessages[0].attachments[0])
         attachment.attachments[0].title_link = getMessageLink(msg, threadedMessages[0].ts)
+
+        let todaysMessages = getTodaysMessages(threadedMessages.slice(1, threadedMessages.length))
+        let todaysUsernamesAndIds = getUsernamesAndIdsFromMessages(todaysMessages, usersList)
+        console.log(todaysMessages)
+
         let numMessages = todaysMessages.length
         attachment.attachments[0].fields[0].title = numMessages + ' new comments by ' + getStringOfMentions(todaysUsernamesAndIds)
         attachment.attachments[0].footer = 'Last commented by ' + getUsername(todaysMessages[todaysMessages.length - 1], usersList)
