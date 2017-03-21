@@ -25,6 +25,10 @@ module.exports = (app) => {
     msg.say("Calling help!")
 	})
 
+  slapp.command('/yolk', '(support)', (msg, text, question, details) => {
+    let supportText = 'Please provide details with your support request so we can resolve issues quickly!'
+    msg.say('<mailto:support@getyolk.com|Click to email us!>\n' + supportText)
+	})
 
   slapp.event('bb.team_added', function (msg) {
     slapp.client.im.open({
