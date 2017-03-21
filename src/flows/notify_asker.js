@@ -16,6 +16,10 @@ module.exports = function (app) {
         })
     }
 
+    function getUserIdFromMention(text) {
+        return text.match('<@(.*)\\|(.*)>')[2]
+    }
+
     function getTimestampWithoutDecimal(ts) {
         return ts.slice(0, 10) + ts.slice(11, ts.length)
     }
@@ -53,68 +57,46 @@ module.exports = function (app) {
     function messageAsker(msg, asker_username, threadedMessages) {
         // Open DM with asker, find the linked question in DM history, add to that thread with answer button
 
-        // Get the channel name for linking question
-        let channelOptions = {
-            token: msg.meta.app_token,
-            channel: msg.meta.channel_id
+        // Get user id mentioned in the parent message
+        let user_id = getUserIdFromMention(threadedMessages[0].attachments[0].title)
+    
+        // Open IM with asker
+        let imOptions = {
+            token: msg.meta.bot_token,
+            user: user_id
         }
-        slapp.client.channels.info(channelOptions, (err, channelData) => {
-            if (err) console.log('Error fetching channel info', err)
-            msg.meta.channel_name = channelData.channel.name
+        slapp.client.im.open(imOptions, (err, imData) => {
+            if (err) console.log('Error opening im with asker', err)
 
-            // Get users to find asker user id
-            slapp.client.users.list({
-                token: msg.meta.app_token
-            }, (err, userData) => {
-                if (err) console.log('Error fetching users', err)
-                let users = userData.members
+            let questionUrl = createUrlForQuestion(msg.meta.team_domain, msg.meta.channel_id, threadedMessages[0].thread_ts)
 
-                for (let i = 0, len = users.length; i < len; i++) {
-                    if (users[i].name === asker_username) {
-                        var user_id = users[i].id
-                        break
-                    }
-                }
+            // Find question thread
+            let searchOptions = {
+                token: msg.meta.app_token,
+                query: createSearchQuery(msg.meta.user_id, questionUrl)
+            }
+            slapp.client.search.messages(searchOptions, (err, searchData) => {
+                if (err) console.log('Error searching direct message', err)
 
-                // Open IM with asker
-                let imOptions = {
+                let currentMsgThreaded = getMessageFromThreadedMessage(msg, threadedMessages)
+                let msgUrl = createUrlThreadedMessage(msg.meta.team_domain, msg.meta.channel_id, msg.body.event.ts, currentMsgThreaded.ts)
+                let reply = generateNotification(currentMsgThreaded, msg, msgUrl)
+                let dm_thread_ts = searchData.messages.matches[0].ts
+
+                console.log(reply)
+                console.log(dm_thread_ts)
+
+                // Link the message in the DM question thread
+                let msgOptions = {
                     token: msg.meta.bot_token,
-                    user: user_id
+                    channel: imData.channel.id,
+                    text: reply.text,
+                    attachments: reply.attachments,
+                    thread_ts: dm_thread_ts,
+                    as_user: true
                 }
-                slapp.client.im.open(imOptions, (err, imData) => {
-                    if (err) console.log('Error opening im with asker', err)
-
-                    let questionUrl = createUrlForQuestion(msg.meta.team_domain, msg.meta.channel_id, threadedMessages[0].thread_ts)
-
-                    // Find question thread
-                    let searchOptions = {
-                        token: msg.meta.app_token,
-                        query: createSearchQuery(msg.meta.user_id, questionUrl)
-                    }
-                    slapp.client.search.messages(searchOptions, (err, searchData) => {
-                        if (err) console.log('Error searching direct message', err)
-
-                        let currentMsgThreaded = getMessageFromThreadedMessage(msg, threadedMessages)
-                        let msgUrl = createUrlThreadedMessage(msg.meta.team_domain, msg.meta.channel_id, msg.body.event.ts, currentMsgThreaded.ts)
-                        let reply = generateNotification(currentMsgThreaded, msg, msgUrl)
-                        let dm_thread_ts = searchData.messages.matches[0].ts
-
-                        console.log(reply)
-                        console.log(dm_thread_ts)
-
-                        // Link the message in the DM question thread
-                        let msgOptions = {
-                            token: msg.meta.bot_token,
-                            channel: imData.channel.id,
-                            text: reply.text,
-                            attachments: reply.attachments,
-                            thread_ts: dm_thread_ts,
-                            as_user: true
-                        }
-                        slapp.client.chat.postMessage(msgOptions, (err, data) => {
-                            if (err) console.log('Error linking comment to im', err)
-                        })
-                    })
+                slapp.client.chat.postMessage(msgOptions, (err, data) => {
+                    if (err) console.log('Error linking comment to im', err)
                 })
             })
         })
@@ -167,7 +149,7 @@ module.exports = function (app) {
             },
             json: true
         }
-        
+
         rp(repliesOptions)
             .then(function (body) {
                 let threadedMessages = body.messages
