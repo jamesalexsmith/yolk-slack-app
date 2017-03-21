@@ -73,9 +73,8 @@ module.exports = function (app) {
             let imSearchOptions = {
                 token: msg.meta.bot_token,
                 channel: imData.channel.id,
-                latest: parseFloat(threadedMessages[0].ts) + 1,
-                oldest: threadedMessages[0].ts,
-                count: 1
+                latest: parseFloat(threadedMessages[0].ts) + 100,
+                oldest: parseFloat(threadedMessages[0].ts) - 1
             }
             slapp.client.im.history(imSearchOptions, (err, imSearchData) => {
                 if (err) console.log('Error fetching im history', err)
@@ -83,7 +82,7 @@ module.exports = function (app) {
                 let currentMsgThreaded = getMessageFromThreadedMessage(msg, threadedMessages)
                 let msgUrl = createUrlThreadedMessage(msg.meta.team_domain, msg.meta.channel_id, msg.body.event.ts, currentMsgThreaded.ts)
                 let reply = generateNotification(currentMsgThreaded, msg, msgUrl)
-                let dm_thread_ts = imSearchData.messages[0].ts
+                let dm_thread_ts = imSearchData.messages[imSearchData.messages.length - 1].ts
 
                 // Link the message in the DM question thread
                 let msgOptions = {
