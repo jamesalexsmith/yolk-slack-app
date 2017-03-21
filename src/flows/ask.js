@@ -95,29 +95,42 @@ module.exports = (app) => {
 			var channel_id = msg.meta.channel_id
 			reply.username = 'yolk'
 			reply.as_user = true
+
+
+			// Post question in channel
 			slack.chat.postMessage(channel_id, reply.text, reply, function (err, res) {
-				if (err) {
-					console.log('Error:', err);
-				} else {
-					var response = res
-
-					// Thread it
-					var data = {
-						username: "yolk",
-						as_user: "true",
-						thread_ts: response.message.ts,
-						reply_broadcast: true
-					}
-
-					slack.chat.postMessage(channel_id, 'Click me to answer!', data, function (err, res) {
-						if (err) {
-							console.log('Error:', err);
-						} else {
-							var response = res
-						}
-					});
+				if (err) console.log('Error:', err)
+					
+				var response = res
+				// Thread it
+				var data = {
+					username: "yolk",
+					as_user: "true",
+					thread_ts: response.message.ts,
+					reply_broadcast: true
 				}
+
+				slack.chat.postMessage(channel_id, 'Click me to answer!', data, function (err, res) {
+					if (err) console.log('Error:', err)
+				});
 			});
+
+			// Post question in DM
+			let imOptions = {
+				token: msg.meta.bot_token,
+				user: msg.meta.user_id
+			}
+			slapp.client.im.open(imOptions, (err, imData) => {
+				if (err) console.log('Error opening DM with user when asking question')
+				// Post question in DM not as a user to avoid yolk bot acting
+				reply.as_user = false
+				slack.chat.postMessage(imData.channel.id, 'Noticed you were asking a question!\nI\'ll keep you updated in here.', function (err, res) {
+					if (err) console.log('Error notifying question asked in DM', err)
+					slack.chat.postMessage(imData.channel.id, reply.text, reply, function (err, res) {
+						if (err) console.log('Error posting question in DM', err)
+					})
+				})
+			})
 		}
 	})
 
