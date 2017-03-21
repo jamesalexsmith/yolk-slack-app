@@ -5,92 +5,6 @@ module.exports = function (app) {
     var rp = require('request-promise')
     var lang_notify_comment = require('../language/notify_comment.json')
 
-    function getTodaysMessages(threadedMessages) {
-        let todaysMessages = []
-        let todaysDate = new Date()
-        for (var i = 0; i < threadedMessages.length; i++) {
-            let messageDate = new Date(threadedMessages[i].ts * 1000);
-            if (todaysDate.setHours(0, 0, 0, 0) == messageDate.setHours(0, 0, 0, 0)) {
-                todaysMessages.push(threadedMessages[i])
-            }
-        }
-
-        return todaysMessages
-    }
-
-    function getUsernamesAndIdsFromMessages(todaysMessages, usersList) {
-        // Return user ids and names of unique users
-        let todaysUsernames = []
-        for (var i = 0; i < todaysMessages.length; i++) {
-            for (var j = 0; j < usersList.length; j++) {
-                if (todaysMessages[i].user === usersList[j].id) {
-                    todaysUsernames.push(usersList[j].name)
-                }
-            }
-        }
-
-        todaysUsernames = [...new Set(todaysUsernames)]
-
-        let todaysUsernamesAndIds = []
-        for (var i = 0; i < todaysUsernames.length; i++) {
-            for (var j = 0; j < usersList.length; j++) {
-                if (todaysUsernames[i] === usersList[j].name) {
-                    todaysUsernamesAndIds.push([usersList[j].id, usersList[j].name])
-                }
-            }
-        }
-
-        return todaysUsernamesAndIds
-    }
-
-    function getStringOfMentions(todaysUsernamesAndIds) {
-        let string = ''
-        for (var i = 0; i < todaysUsernamesAndIds.length && i < 3; i++) {
-            string += '@' + todaysUsernamesAndIds[i][1] + ', '
-        }
-
-        string = string.slice(0, -2)
-
-        if (todaysUsernamesAndIds.length > 3) {
-            string += ' and ' + todaysUsernamesAndIds.length - 3 + 'others!'
-        } else {
-            string += '!'
-        }
-
-        return string
-    }
-
-    function getMessageLink(msg, timestamp) {
-        // https://yolkhq.slack.com/archives/testing/p1489077688000178
-        let parsedTimestamp = timestamp.replace('.', '')
-        return 'https://' + msg.meta.team_domain + '.slack.com/archives/' + msg.meta.channel_name + '/p' + parsedTimestamp
-    }
-
-    function getUsername(message, usersList) {
-        for (var i = 0; i < usersList.length; i++) {
-            if (usersList[i].id === message.user) {
-                return usersList[i].name
-            }
-        }
-    }
-
-    function generateNotificationAttachment(threadedMessages, msg, usersList, asker_username) {
-        let attachment = lang_notify_comments
-        attachment.text = '_Hey ' + asker_username + ', there\'s been activity on your question!_'
-        attachment.attachments[0].title = getQuestionText(threadedMessages[0].attachments[0])
-        attachment.attachments[0].title_link = getMessageLink(msg, threadedMessages[0].ts)
-
-        let todaysMessages = getTodaysMessages(threadedMessages.slice(1, threadedMessages.length))
-        let todaysUsernamesAndIds = getUsernamesAndIdsFromMessages(todaysMessages, usersList)
-
-        let numMessages = todaysMessages.length
-        attachment.attachments[0].fields[0].title = numMessages + ' new comments by ' + getStringOfMentions(todaysUsernamesAndIds)
-        attachment.attachments[0].footer = 'Last commented by ' + getUsername(todaysMessages[todaysMessages.length - 1], usersList)
-        attachment.attachments[0].ts = todaysMessages[todaysMessages.length - 1].ts
-
-        return attachment
-    }
-
     function deleteFirstHelperMessage(msg, helperMessage) {
         let delete_request = {
             token: msg.meta.bot_token,
@@ -100,17 +14,6 @@ module.exports = function (app) {
         slapp.client.chat.delete(delete_request, (err, deleteData) => {
             if (err) console.log('Error deleting helper message', err)
         })
-    }
-
-    function shouldNotifyAsker(threadedMessages) {
-        // Is first answer of day for the thread?
-        var latest_msg_date = new Date(threadedMessages[threadedMessages.length - 1].ts * 1000);
-        latest_msg_date = new Date(latest_msg_date.getFullYear(), latest_msg_date.getMonth(), latest_msg_date.getDate());
-        var prev_msg_date = new Date(threadedMessages[threadedMessages.length - 2].ts * 1000);
-        prev_msg_date = new Date(prev_msg_date.getFullYear(), prev_msg_date.getMonth(), prev_msg_date.getDate());
-
-        // When it is the first message of the day in the thread send IM
-        return latest_msg_date > prev_msg_date
     }
 
     function getTimestampWithoutDecimal(ts) {
@@ -251,6 +154,9 @@ module.exports = function (app) {
     }
 
     return function (msg) {
+        initializeThumbsUpAndDown(msg)
+
+        // Need to use API directly since smallwins/slack is on version 7.5.*
         let repliesOptions = {
             method: 'GET',
             url: 'https://slack.com/api/channels.replies',
@@ -261,9 +167,7 @@ module.exports = function (app) {
             },
             json: true
         }
-
-        initializeThumbsUpAndDown(msg)
-
+        
         rp(repliesOptions)
             .then(function (body) {
                 let threadedMessages = body.messages
