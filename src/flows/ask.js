@@ -111,7 +111,8 @@ module.exports = (app) => {
 					if (err) console.log('Error opening DM with user when asking question')
 					let ts = response.message.ts
 					let questionUrl = 'https://' + msg.meta.team_domain + '.slack.com/archives/' + msg.meta.channel_id + '/' + 'p' + ts.slice(0,10) + ts.slice(11, ts.length)
-					let text = 'Noticed you were asking a question! I\'ll keep you updated in here.\n ' + questionUrl
+					let questionUrlLink = '<' + questionUrl + '|question>'
+					let text = 'Noticed you asked me to post a ' + questionUrlLink +'! I\'ll keep you updated in here.'
 					slack.chat.postMessage(imData.channel.id, text, {as_user: true}, function (err, res) {
 						if (err) console.log('Error linking question asked in DM', err)
 					})
