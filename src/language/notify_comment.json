@@ -1,0 +1,19 @@
+{
+    "text": "",
+    "attachments": [{
+        "callback_id": "answers_callback",
+        "color": "#FDCE2E",
+        "title": "",
+        "text": "",
+        "fields": [{
+            "title": ""
+        }],
+        "actions": [{
+            "name": "accept",
+            "style": "primary",
+            "text": "Accept!",
+            "type": "button",
+            "value": ""
+        }]
+    }]
+}
