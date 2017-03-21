@@ -72,7 +72,7 @@ module.exports = (app) => {
 		let navigation = JSON.parse(JSON.stringify(lang_navigate_answers))
 		if (index === 0) {
 			navigation.actions.push(JSON.parse(JSON.stringify(lang_next_button)))
-		} else if (index == length - 1) {
+		} else if (index === length - 1) {
 			navigation.actions.push(JSON.parse(JSON.stringify(lang_previous_button)))
 		} else {
 			navigation.actions.push(JSON.parse(JSON.stringify(lang_previous_button)))
@@ -86,11 +86,24 @@ module.exports = (app) => {
 		let paginatedAnswers = []
 		for (var i = 0; i < paginatedMessages.length; i++) {
 			let formattedPagination = createFormattedPagination(paginatedMessages[i])
-			formattedPagination.push(generateNavigationButtons(i, paginatedMessages.length))
+			if (paginatedMessages.length !== 1) { // If there is more than one page
+				formattedPagination.push(generateNavigationButtons(i, paginatedMessages.length))
+			}
 			paginatedAnswers.push(formattedPagination)
 		}
 
 		return paginatedAnswers
+	}
+
+	function removeBotMessages(threadedMessages) {
+		let userMessages = []
+		for (var i = 0; i < threadedMessages.length; i++) {
+			if (!threadedMessages[i].bot_id) {
+				userMessages.push(threadedMessages[i])
+			}
+		}
+
+		return userMessages
 	}
 
 	slapp.action('answers_callback', 'show', 'show', (msg, text) => {
@@ -116,7 +129,8 @@ module.exports = (app) => {
 			rp(repliesOptions)
 				.then(function (body) {
 					let threadedMessages = body.messages
-					let paginatedMessages = createPagination(threadedMessages.slice(1, threadedMessages.length))
+					threadedMessages = removeBotMessages(threadedMessages)
+					let paginatedMessages = createPagination(threadedMessages)
 					let formattedPaginatedMessages = generateFormattedPaginations(paginatedMessages)
 					let reply = lang_select_answer
 
@@ -153,17 +167,18 @@ module.exports = (app) => {
 		let option = msg.body.actions[0].name
 
 		if (option === 'accept') {
-			// console.log(msg.body.actions)
-			// console.log(JSON.parse(msg.body.actions[0].value))
-			// console.log(msg, msg.body.actions, state.threaded_messages[0])
 			acceptAnswer(msg, state.channel_id, JSON.parse(msg.body.actions[0].value))
-			msg.route('process_notification', state)
+			msg.respond('I\'ll send along the thanks!')
+			return
 		} else if (option === 'next') {
 			reply.attachments = state.paginations[state.pagination_index + 1]
 			state.pagination_index += 1
 		} else if (option === 'previous') {
 			reply.attachments = state.paginations[state.pagination_index - 1]
 			state.pagination_index -= 1
+		} else if (option === 'dismiss') {
+			msg.respond('I\'ll keep you posted on any new changes.')
+			return
 		}
 
 		msg
