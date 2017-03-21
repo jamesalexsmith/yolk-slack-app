@@ -100,9 +100,24 @@ module.exports = (app) => {
 			// Post question in channel
 			slack.chat.postMessage(channel_id, reply.text, reply, function (err, res) {
 				if (err) console.log('Error:', err)
-					
 				var response = res
-				// Thread it
+
+				// Post question in DM
+				let imOptions = {
+					token: msg.meta.bot_token,
+					user: msg.meta.user_id
+				}
+				slapp.client.im.open(imOptions, (err, imData) => {
+					if (err) console.log('Error opening DM with user when asking question')
+					let ts = response.message.ts
+					let questionUrl = 'https://' + msg.meta.team_domain + '.slack.com/archives/' + msg.meta.channel_id + '/' + 'p' + ts.slice(0,10) + ts.slice(11, ts.length)
+					let text = 'Noticed you were asking a question! I\'ll keep you updated in here.\n ' + questionUrl
+					slack.chat.postMessage(imData.channel.id, text, {as_user: true}, function (err, res) {
+						if (err) console.log('Error linking question asked in DM', err)
+					})
+				})
+
+				// Thread the question in the channel
 				var data = {
 					username: "yolk",
 					as_user: "true",
@@ -115,22 +130,6 @@ module.exports = (app) => {
 				});
 			});
 
-			// Post question in DM
-			let imOptions = {
-				token: msg.meta.bot_token,
-				user: msg.meta.user_id
-			}
-			slapp.client.im.open(imOptions, (err, imData) => {
-				if (err) console.log('Error opening DM with user when asking question')
-				// Post question in DM not as a user to avoid yolk bot acting
-				reply.as_user = false
-				slack.chat.postMessage(imData.channel.id, 'Noticed you were asking a question!\nI\'ll keep you updated in here.', function (err, res) {
-					if (err) console.log('Error notifying question asked in DM', err)
-					slack.chat.postMessage(imData.channel.id, reply.text, reply, function (err, res) {
-						if (err) console.log('Error posting question in DM', err)
-					})
-				})
-			})
 		}
 	})
 

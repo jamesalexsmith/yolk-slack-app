@@ -3,8 +3,10 @@
 module.exports = (app) => {
   let slapp = app.slapp
 
-  slapp.message('(.*)', 'direct_message', (msg, text) => {
+  slapp.message('(.*)', ['direct_message', 'direct_mention'], (msg, text) => {
     if (text === 'help'){
+      return {}
+    } else if (text.startsWith('Noticed you were asking a question!')) {
       return {}
     }
 
