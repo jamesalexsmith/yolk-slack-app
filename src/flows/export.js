@@ -47,18 +47,30 @@ module.exports = (app) => {
             }
             else {
                 let csv = json2csv({data: json_csv, fields: fields})
-                let fileOptions = {
-                    token: msg.meta.bot_token,
-                    filetype: 'csv',
-                    title: 'question mining export',
-                    filename: 'question mining export',
-                    content: csv
-                }
-                slapp.client.files.upload(fileOptions, (err, data) => {
-                    if (err) console.log('Error upload question export csv', err)
-                    console.log(data)
-                })
+                messageUserCsv(msg, csv)
             }
+        })
+    }
+
+    function messageUserCsv(msg, csv) {
+        let imOptions = {
+            token: msg.meta.bot_token,
+            user: msg.body.user_id
+        }
+        slapp.client.im.open(imOptions, (err, imData) => {
+            if (err) console.log('Error opening IM when export', err)
+
+            let fileOptions = {
+                token: msg.meta.bot_token,
+                filetype: 'csv',
+                title: 'question mining export',
+                filename: 'question mining export',
+                content: csv,
+                channels: imData.channel.id
+            }
+            slapp.client.files.upload(fileOptions, (err, data) => {
+                if (err) console.log('Error upload question export csv', err)
+            })
         })
     }
 
