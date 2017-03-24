@@ -30,26 +30,26 @@ module.exports = (app) => {
     msg.say('<mailto:support@getyolk.com|Click to email us!>\n' + supportText)
 	})
 
-  slapp.event('bb.team_added', function (msg) {
-    slapp.client.im.open({
-      token: msg.meta.bot_token,
-      user: msg.meta.user_id
-    }, (err, data) => {
-      if (err) {
-        return console.error(err)
-      }
-      let channel = data.channel.id
+  // slapp.event('bb.team_added', function (msg) {
+  //   slapp.client.im.open({
+  //     token: msg.meta.bot_token,
+  //     user: msg.meta.user_id
+  //   }, (err, data) => {
+  //     if (err) {
+  //       return console.error(err)
+  //     }
+  //     let channel = data.channel.id
 
-      msg.say({
-        channel: channel,
-        text: 'Thanks for adding me to your team!'
-      })
-      msg.say({
-        channel: channel,
-        text: help
-      })
-    })
-  })
+  //     msg.say({
+  //       channel: channel,
+  //       text: 'Thanks for adding me to your team!'
+  //     })
+  //     msg.say({
+  //       channel: channel,
+  //       text: help
+  //     })
+  //   })
+  // })
 
   return {}
 }

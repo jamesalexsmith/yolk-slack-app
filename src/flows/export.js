@@ -8,6 +8,10 @@ module.exports = (app) => {
                   'meta_data_3', 'answer_4', 'meta_data_4', 'answer_5', 'meta_data_5']
 
     slapp.command('/yolk', '(export)', (msg, text) => {
+        if (msg.body.channel_name === 'directmessage') {
+            msg.respond('You can only use this command in a channel!')
+            return
+        }
         msg.respond('Working away... I\'ll direct message you the results when ready!')
         let historyOptions = {
             token: msg.meta.app_token,
@@ -21,7 +25,10 @@ module.exports = (app) => {
 
     function getHistory(json_csv, msg, requestOptions) {
         slapp.client.channels.history(requestOptions, (err, data) => {
-            if (err) console.log('Error fetching channel history in export', err)
+            if (err) {
+                console.log('Error fetching channel history in export', err)
+                return
+            } 
 
             for (var i = 0; i < data.messages.length; i++) {
                 if (isQuestion(data.messages[i].text)) {
@@ -58,18 +65,24 @@ module.exports = (app) => {
             user: msg.body.user_id
         }
         slapp.client.im.open(imOptions, (err, imData) => {
-            if (err) console.log('Error opening IM when export', err)
+            if (err) {
+                console.log('Error opening IM when export', err)
+                return
+            } 
 
             let fileOptions = {
                 token: msg.meta.bot_token,
                 filetype: 'csv',
-                title: 'question mining export',
-                filename: 'question mining export',
+                title: 'question mining export from channel ' + msg.body.channel_name,
+                filename: msg.body.channel_name + '_export.csv',
                 content: csv,
                 channels: imData.channel.id
             }
             slapp.client.files.upload(fileOptions, (err, data) => {
-                if (err) console.log('Error upload question export csv', err)
+                if (err) {
+                    console.log('Error upload question export csv', err)
+                    return
+                } 
             })
         })
     }

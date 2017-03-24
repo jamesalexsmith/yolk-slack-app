@@ -23,7 +23,10 @@ module.exports = (app) => {
 		}
 
 		slapp.client.chat.postMessage(msgOptions, (err, postData) => {
-			if (err) console.log('Error posting accepted answer', err)
+			if (err) {
+				console.log('Error posting accepted answer', err)
+				return
+			}
 		})
 	})
 

@@ -99,7 +99,10 @@ module.exports = (app) => {
 
 			// Post question in channel
 			slack.chat.postMessage(channel_id, reply.text, reply, function (err, res) {
-				if (err) console.log('Error:', err)
+				if (err) {
+					console.log('Error:', err)
+					return
+				}
 				var response = res
 
 				// Post question in DM
@@ -108,12 +111,18 @@ module.exports = (app) => {
 					user: msg.meta.user_id
 				}
 				slapp.client.im.open(imOptions, (err, imData) => {
-					if (err) console.log('Error opening DM with user when asking question')
+					if (err) {
+						console.log('Error opening DM with user when asking question')
+						return
+					}
 					let ts = response.message.ts
 					let questionUrl = 'https://' + msg.meta.team_domain + '.slack.com/archives/' + msg.meta.channel_id + '/' + 'p' + ts.slice(0,10) + ts.slice(11, ts.length)
 					let text = 'Noticed you asked me to post a question: ' + questionUrl + '\n I\'ll keep you updated in here.'
 					slack.chat.postMessage(imData.channel.id, text, {as_user: true}, function (err, res) {
-						if (err) console.log('Error linking question asked in DM', err)
+						if (err) {
+							console.log('Error linking question asked in DM', err)
+							return
+						}
 					})
 				})
 
@@ -126,7 +135,10 @@ module.exports = (app) => {
 				}
 
 				slack.chat.postMessage(channel_id, 'Click me to answer!', data, function (err, res) {
-					if (err) console.log('Error:', err)
+					if (err) {
+						console.log('Error:', err)
+						return
+					}
 				});
 			});
 

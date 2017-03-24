@@ -12,7 +12,10 @@ module.exports = function (app) {
             channel: msg.body.event.channel
         }
         slapp.client.chat.delete(delete_request, (err, deleteData) => {
-            if (err) console.log('Error deleting helper message', err)
+            if (err) {
+                console.log('Error deleting helper message', err)
+                return
+            }
         })
     }
 
@@ -66,7 +69,10 @@ module.exports = function (app) {
             user: user_id
         }
         slapp.client.im.open(imOptions, (err, imData) => {
-            if (err) console.log('Error opening im with asker', err)
+            if (err) {
+                console.log('Error opening im with asker', err)
+                return
+            }
 
             let questionUrl = createUrlForQuestion(msg.meta.team_domain, msg.meta.channel_id, threadedMessages[0].thread_ts)
 
@@ -77,7 +83,10 @@ module.exports = function (app) {
                 oldest: parseFloat(threadedMessages[0].ts) - 1
             }
             slapp.client.im.history(imSearchOptions, (err, imSearchData) => {
-                if (err) console.log('Error fetching im history', err)
+                if (err) {
+                    console.log('Error fetching im history', err)
+                    return
+                }
 
                 let currentMsgThreaded = getMessageFromThreadedMessage(msg, threadedMessages)
                 let msgUrl = createUrlThreadedMessage(msg.meta.team_domain, msg.meta.channel_id, msg.body.event.ts, currentMsgThreaded.ts)
@@ -95,7 +104,10 @@ module.exports = function (app) {
                     as_user: true
                 }
                 slapp.client.chat.postMessage(msgOptions, (err, data) => {
-                    if (err) console.log('Error linking comment to im', err)
+                    if (err) {
+                        console.log('Error linking comment to im', err)
+                        return
+                    }
                 })
             })
         })
@@ -119,7 +131,10 @@ module.exports = function (app) {
         }
 
         slapp.client.reactions.add(reactionOptions, (err) => {
-            if (err) console.log('Error adding reaction +1', err)
+            if (err) {
+                console.log('Error adding reaction +1', err)
+                return
+            }
 
             let secondReactionOptions = {
                 token: msg.meta.bot_token,
@@ -129,7 +144,10 @@ module.exports = function (app) {
             }
 
             slapp.client.reactions.add(secondReactionOptions, (err) => {
-                if (err) console.log('Error adding reaction -1', err)
+                if (err) {
+                    console.log('Error adding reaction -1', err)
+                    return
+                }
             })
         })
     }
