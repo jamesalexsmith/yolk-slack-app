@@ -82,6 +82,7 @@ module.exports = function (app) {
                 let currentMsgThreaded = getMessageFromThreadedMessage(msg, threadedMessages)
                 let msgUrl = createUrlThreadedMessage(msg.meta.team_domain, msg.meta.channel_id, msg.body.event.ts, currentMsgThreaded.ts)
                 let reply = generateNotification(currentMsgThreaded, msg, msgUrl)
+                // TODO Search for message by text in imSearchData
                 let dm_thread_ts = imSearchData.messages[imSearchData.messages.length - 1].ts
 
                 // Link the message in the DM question thread
