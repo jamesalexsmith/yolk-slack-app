@@ -30,6 +30,7 @@ module.exports = (app) => {
                 return
             } 
 
+            // TODO: Output user id, and timestamp for each question
             for (var i = 0; i < data.messages.length; i++) {
                 if (isQuestion(data.messages[i].text)) {
                     json_csv.push({
@@ -38,12 +39,7 @@ module.exports = (app) => {
                         answer_2: data.messages[Math.max(i - 2, 0)].text,
                         answer_3: data.messages[Math.max(i - 3, 0)].text,
                         answer_4: data.messages[Math.max(i - 4, 0)].text,
-                        answer_5: data.messages[Math.max(i - 5, 0)].text,
-                        meta_data_1: data.messages[Math.max(i - 1, 0)],
-                        meta_data_2: data.messages[Math.max(i - 2, 0)],
-                        meta_data_3: data.messages[Math.max(i - 3, 0)],
-                        meta_data_4: data.messages[Math.max(i - 4, 0)],
-                        meta_data_5: data.messages[Math.max(i - 5, 0)]
+                        answer_5: data.messages[Math.max(i - 5, 0)].text
                     })
                 }
             }
