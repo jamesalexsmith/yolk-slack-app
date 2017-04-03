@@ -6,6 +6,7 @@ module.exports = (app) => {
 		help: require('./help')(app),
 		ask: require('./ask')(app),
 		search: require('./search')(app),
+		import: require('./import')(app),
 		export: require('./export')(app),
 		answer: require('./answer')(app),
 		message_dispatcher: require('./message_dispatcher')(app)
