@@ -1,20 +1,31 @@
 'use strict'
 
 module.exports = (app) => {
-  let slapp = app.slapp
+	let slapp = app.slapp
 
-  // slapp.message('(.*)', 'direct_message', (msg, text) => {
-  //   if (text === 'help'){
-  //     return {}
-  //   } else if (text.startsWith('Noticed you asked me to post a ')) {
-  //     return {}
-  //   } else if (msg.body.event.thread_ts) { // In a thread
-  //     return {}
-  //   }
+	slapp.command('/yolk', '(search)', (msg, text) => {
+		console.log('search', msg)
+		msg.respond('Searching.')
+	})
 
-  //   msg.say('TODO: search for similar questions')
-  //   msg.say('If you want to post this question direct mention me or use a /yolk command in the channel you want to post a question to!')
-  // })
+	slapp.message('(.*)', ['direct_message', 'direct_mention'], (msg, text) => {
+		let searchQuery = 'from:@yolk Hey @channel has a question:' + msg.body.event.text
 
-  return {}
+		let searchOptions = {
+			token: msg.meta.bot_token,
+			query: 'test',
+			count: 5
+		}
+
+		slapp.client.search.messages(searchOptions, (err, searchData) => {
+			if (err) {
+				console.log('Error searching for yolk', err)
+				return
+			}
+
+			console.log(searchData)
+		})
+	})
+
+	return {}
 }

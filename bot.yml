@@ -8,3 +8,4 @@ slackscopes:
   - incoming-webhook
   - channels:history
   - chat:write:bot
+  - search:read
