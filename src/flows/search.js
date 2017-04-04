@@ -9,11 +9,19 @@ module.exports = (app) => {
 	})
 
 	slapp.message('(.*)', ['direct_message', 'direct_mention'], (msg, text) => {
-		let searchQuery = 'from:@yolk Hey @channel has a question:' + msg.body.event.text
+		if (text === 'help') {
+			return {}
+		} else if (text.startsWith('Noticed you asked me to post a ')) {
+			return {}
+		} else if (msg.body.event.thread_ts) { // In a thread
+			return {}
+		}
+
+		let searchQuery = 'from:@yolk Hey @channel has a question: ' + text
 
 		let searchOptions = {
-			token: msg.meta.bot_token,
-			query: 'test',
+			token: msg.meta.app_token,
+			query: searchQuery,
 			count: 5
 		}
 
@@ -23,9 +31,21 @@ module.exports = (app) => {
 				return
 			}
 
-			console.log(searchData)
+			if (searchData.messages.matches.length === 0) {
+				msg.say('No results found!')
+				return
+			}
+
+			let reply = 'Found ' + searchData.messages.matches.length + ' matches!'
+			for (var i = 0; i < searchData.messages.matches.length; i++) {
+				reply += ' \n'
+				reply += searchData.messages.matches[i].permalink
+			}
+			msg.say(reply)
 		})
 	})
+
+
 
 	return {}
 }
