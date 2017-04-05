@@ -22,7 +22,7 @@ module.exports = (app) => {
 		let searchOptions = {
 			token: msg.meta.app_token,
 			query: searchQuery,
-			count: 5
+			count: 100
 		}
 
 		slapp.client.search.messages(searchOptions, (err, searchData) => {
@@ -31,15 +31,23 @@ module.exports = (app) => {
 				return
 			}
 
-			if (searchData.messages.matches.length === 0) {
+			// Filter out messages that aren't threaded (hack to find yolk things)
+			let messages = []
+			for (var i = 0; i < searchData.messages.matches.length; i++) {
+				if (searchData.messages.matches[i].permalink.includes('thread_ts')) {
+					messages.push(searchData.messages.matches[i])
+				}
+			}
+
+			if (messages.length === 0) {
 				msg.say('No results found!')
 				return
 			}
 
-			let reply = 'Found ' + searchData.messages.matches.length + ' matches!'
-			for (var i = 0; i < searchData.messages.matches.length; i++) {
+			let reply = 'Found ' + messages.length + ' matches!'
+			for (var i = 0; i < messages.length; i++) {
 				reply += ' \n'
-				reply += searchData.messages.matches[i].permalink
+				reply += messages[i].permalink
 			}
 			msg.say(reply)
 		})

@@ -14,7 +14,7 @@ module.exports = (app) => {
   })
 
   slapp.command('/yolk', '(help)', (msg, text, question, details) => {
-    msg.say(help)
+    msg.respond(help)
 	})
 
   slapp.message('(operator)', ['direct_mention', 'direct_message'], (msg, text) => {
@@ -22,12 +22,12 @@ module.exports = (app) => {
   })
 
   slapp.command('/yolk', '(operator)', (msg, text, question, details) => {
-    msg.say("Calling help!")
+    msg.respond("Calling help!")
 	})
 
   slapp.command('/yolk', '(support)', (msg, text, question, details) => {
     let supportText = 'Please provide details with your support request so we can resolve issues quickly!'
-    msg.say('<mailto:support@getyolk.com|Click to email us!>\n' + supportText)
+    msg.respond('<mailto:support@getyolk.com|Click to email us!>\n' + supportText)
 	})
 
   // slapp.event('bb.team_added', function (msg) {
