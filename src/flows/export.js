@@ -3,9 +3,7 @@
 module.exports = (app) => {
     let slapp = app.slapp
     var json2csv = require('json2csv')
-    var fields = ['question',
-                  'answer_1', 'meta_data_1', 'answer_2', 'meta_data_2', 'answer_3',
-                  'meta_data_3', 'answer_4', 'meta_data_4', 'answer_5', 'meta_data_5']
+    var fields = ['question', 'answer_1', 'answer_2', 'answer_3', 'answer_4', 'answer_5']
 
     slapp.command('/yolk', '(export)', (msg, text) => {
         if (msg.body.channel_name === 'directmessage') {
