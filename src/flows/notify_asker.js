@@ -34,15 +34,6 @@ module.exports = function (app) {
         return url + '&cid=' + channel_id
     }
 
-    function createUrlForQuestion(domain, channel_id, thread_ts) {
-        let questionUrl = 'https://' + domain + '.slack.com/archives/' + channel_id
-        return '/' + 'p' + thread_ts.slice(0, 10) + thread_ts.slice(11, thread_ts.length)
-    }
-
-    function createSearchQuery(user_id, questionUrl) {
-        return 'from:yolk to:' + user_id + ' ' + questionUrl + ' in:@yolk'
-    }
-
     function generateNotification(message, msg, msgUrl) {
         let notification = lang_notify_comment
         notification.text = '<@' + message.user + '>' + ' <' + msgUrl + '|commented>'
@@ -60,11 +51,10 @@ module.exports = function (app) {
 
     function messageAsker(msg, asker_username, threadedMessages) {
         // Open DM with asker, find the linked question in DM history, add to that thread with answer button
-        console.log(threadedMessages)
 
         // Get user id mentioned in the parent message
         let user_id = getUserIdFromMention(threadedMessages[0].attachments[0].title)
-    
+
         // Open IM with asker
         let imOptions = {
             token: msg.meta.bot_token,
@@ -75,8 +65,6 @@ module.exports = function (app) {
                 console.log('Error opening im with asker', err)
                 return
             }
-
-            let questionUrl = createUrlForQuestion(msg.meta.team_domain, msg.meta.channel_id, threadedMessages[0].thread_ts)
 
             let imSearchOptions = {
                 token: msg.meta.bot_token,
@@ -93,8 +81,11 @@ module.exports = function (app) {
                 let currentMsgThreaded = getMessageFromThreadedMessage(msg, threadedMessages)
                 let msgUrl = createUrlThreadedMessage(msg.meta.team_domain, msg.meta.channel_id, msg.body.event.ts, currentMsgThreaded.ts)
                 let reply = generateNotification(currentMsgThreaded, msg, msgUrl)
+
                 // TODO Search for message by text in imSearchData
                 let dm_thread_ts = imSearchData.messages[imSearchData.messages.length - 1].ts
+                console.log(imSearchData.messages[0])
+                console.log(imSearchData.messages)
 
                 // Link the message in the DM question thread
                 let msgOptions = {
@@ -114,45 +105,47 @@ module.exports = function (app) {
 
                 // If this is the first response:
                 if (threadedMessages.length - 1 == 1) {
+                    // Update the notification text
                     let notification = lang_notify_asker_new_question
                     notification.text = '_Someone commented! Click on the replies to see if we have your answer._'
-					notification.attachments = threadedMessages[0].attachments
-					notification.attachments[0].footer = '<!date^' + Math.floor(new Date() / 1000) + '^Replied {date_long} at {time}|Replied ' + new Date().toLocaleString() + '>'
-					
-					let updateOptions = {
-						token: msg.meta.bot_token,
-						channel: imData.channel.id,
-						text: notification.text,
-						attachments: notification.attachments,
-                        ts: dm_thread_ts
-					}
-                    slapp.client.chat.update(updateOptions, (err, postData) => {
-						if (err) {
-							console.log('Error notifying asker of new question', err)
-							return
-						}
-					})
+                    notification.attachments = imSearchData.messages[imSearchData.messages.length - 1].attachments
+                    notification.attachments[0].footer = '<!date^' + Math.floor(new Date() / 1000) + '^Replied {date_long} at {time}|Replied ' + new Date().toLocaleString() + '>'
 
-                // If this is the second response:
-                } else if (threadedMessages.length - 1 == 2){
+                    let updateOptions = {
+                        token: msg.meta.bot_token,
+                        channel: imData.channel.id,
+                        text: notification.text,
+                        attachments: notification.attachments,
+                        ts: dm_thread_ts
+                    }
+                    slapp.client.chat.update(updateOptions, (err, postData) => {
+                        if (err) {
+                            console.log('Error notifying asker of new question', err)
+                            return
+                        }
+                    })
+
+                    // If this is the second response:
+                } else if (threadedMessages.length - 1 == 2) {
+                    // Update the notification text
                     let notification = lang_notify_asker_new_question
                     notification.text = '_A few people have commented now. Click on the replies to see if we have your answer._'
-					notification.attachments = threadedMessages[0].attachments
-					notification.attachments[0].footer = '<!date^' + Math.floor(new Date() / 1000) + '^Last replied {date_long} at {time}|Last replied ' + new Date().toLocaleString() + '>'
-					
-					let updateOptions = {
-						token: msg.meta.bot_token,
-						channel: imData.channel.id,
-						text: notification.text,
-						attachments: notification.attachments,
+                    notification.attachments = imSearchData.messages[imSearchData.messages.length - 1].attachments
+                    notification.attachments[0].footer = '<!date^' + Math.floor(new Date() / 1000) + '^Last replied {date_long} at {time}|Last replied ' + new Date().toLocaleString() + '>'
+
+                    let updateOptions = {
+                        token: msg.meta.bot_token,
+                        channel: imData.channel.id,
+                        text: notification.text,
+                        attachments: notification.attachments,
                         ts: dm_thread_ts
-					}
+                    }
                     slapp.client.chat.update(updateOptions, (err, postData) => {
-						if (err) {
-							console.log('Error notifying asker of new question', err)
-							return
-						}
-					})
+                        if (err) {
+                            console.log('Error notifying asker of new question', err)
+                            return
+                        }
+                    })
                 }
             })
         })

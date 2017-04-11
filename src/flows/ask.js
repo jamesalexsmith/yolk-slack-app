@@ -118,7 +118,7 @@ module.exports = (app) => {
 					}
 					let new_question = lang_notify_new_question
 					new_question.text = '_Got it! Here\'s your question:_'
-					new_question.attachments[0].title = state.question
+					new_question.attachments[0].title = 'Q: ' + state.question
 					new_question.attachments[0].footer = '<!date^' + Math.floor(new Date() / 1000) + '^Posted {date_long} at {time}|Posted ' + new Date().toLocaleString() + '>'
 					
 					let msgOptions = {
