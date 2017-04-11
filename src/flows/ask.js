@@ -97,7 +97,6 @@ module.exports = (app) => {
 			reply.username = 'yolk'
 			reply.as_user = true
 
-
 			// Post question in channel
 			slack.chat.postMessage(channel_id, reply.text, reply, function (err, res) {
 				if (err) {
@@ -139,12 +138,11 @@ module.exports = (app) => {
 				// Thread the question in the channel
 				var data = {
 					username: "yolk",
-					as_user: "true",
 					thread_ts: response.message.ts,
-					reply_broadcast: true
+					as_user: true
 				}
 
-				slack.chat.postMessage(channel_id, 'Click me to answer!', data, function (err, res) {
+				slack.chat.postMessage(channel_id, 'Lets get this conversation started!', data, function (err, res) {
 					if (err) {
 						console.log('Error:', err)
 						return

@@ -5,6 +5,11 @@
             "mrkdwn_in": ["text", "pretext", "fields"],
             "color": "#FDCE2E",
             "title": "Where is the product sheet?"
+        },
+        {
+            "mrkdwn_in": ["text", "pretext", "fields"],
+            "color": "#FDCE2E",
+            "text": "_Click reply to answer!_"
         }
     ]
 }

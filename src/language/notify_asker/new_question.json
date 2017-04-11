@@ -2,6 +2,7 @@
     "text": "_Got it! Here's your question:_",
     "attachments": [
         {
+            "callback_id": "answers_callback",
             "mrkdwn_in": ["text", "pretext", "fields"],
             "color": "#FDCE2E",
             "title": "",
