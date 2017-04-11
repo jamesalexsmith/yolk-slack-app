@@ -18,7 +18,6 @@ module.exports = (app) => {
 			text: reply.text,
 			attachments: reply.attachments,
 			thread_ts: acceptedMessage.event.thread_ts,
-			reply_broadcast: true,
 			as_user: true
 		}
 

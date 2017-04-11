@@ -28,15 +28,10 @@ module.exports = function (app) {
         return ts.slice(0, 10) + ts.slice(11, ts.length)
     }
 
-    function createUrlThreadedMessage(domain, channel_id, message_ts, thread_ts) {
-        let url = 'https://' + domain + '.slack.com/archives/' + channel_id + '/' + 'p'
-        url += getTimestampWithoutDecimal(message_ts) + '?' + 'thread_ts=' + getTimestampWithoutDecimal(thread_ts)
-        return url + '&cid=' + channel_id
-    }
-
-    function generateNotification(message, msg, msgUrl) {
+    function generateNotification(message, msg) {
         let notification = lang_notify_comment
-        notification.text = '<@' + message.user + '>' + ' <' + msgUrl + '|commented>'
+        notification.attachments[0].title = msg.body.event.text
+        notification.attachments[0].text = '<@' + message.user + '>'
         notification.attachments[0].actions[0].value = JSON.stringify(msg.body) // Pass along the message
         return notification
     }
@@ -79,13 +74,10 @@ module.exports = function (app) {
                 }
 
                 let currentMsgThreaded = getMessageFromThreadedMessage(msg, threadedMessages)
-                let msgUrl = createUrlThreadedMessage(msg.meta.team_domain, msg.meta.channel_id, msg.body.event.ts, currentMsgThreaded.ts)
-                let reply = generateNotification(currentMsgThreaded, msg, msgUrl)
+                let reply = generateNotification(currentMsgThreaded, msg)
 
                 // TODO Search for message by text in imSearchData
                 let dm_thread_ts = imSearchData.messages[imSearchData.messages.length - 1].ts
-                console.log(imSearchData.messages[0])
-                console.log(imSearchData.messages)
 
                 // Link the message in the DM question thread
                 let msgOptions = {
