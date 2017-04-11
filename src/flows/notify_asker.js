@@ -83,10 +83,11 @@ module.exports = function (app) {
                 let msgOptions = {
                     token: msg.meta.bot_token,
                     channel: imData.channel.id,
-                    text: reply.text,
+                    text: 'New comment',
                     attachments: reply.attachments,
                     thread_ts: dm_thread_ts,
-                    as_user: true
+                    as_user: true,
+                    reply_broadcast: true
                 }
                 slapp.client.chat.postMessage(msgOptions, (err, data) => {
                     if (err) {
@@ -101,7 +102,6 @@ module.exports = function (app) {
                     let notification = lang_notify_asker_new_question
                     notification.text = '_Someone commented! Click on the replies to see if we have your answer._'
                     notification.attachments = imSearchData.messages[imSearchData.messages.length - 1].attachments
-                    notification.attachments[0].footer = '<!date^' + Math.floor(new Date() / 1000) + '^Replied {date_long} at {time}|Replied ' + new Date().toLocaleString() + '>'
 
                     let updateOptions = {
                         token: msg.meta.bot_token,
@@ -123,7 +123,6 @@ module.exports = function (app) {
                     let notification = lang_notify_asker_new_question
                     notification.text = '_A few people have commented now. Click on the replies to see if we have your answer._'
                     notification.attachments = imSearchData.messages[imSearchData.messages.length - 1].attachments
-                    notification.attachments[0].footer = '<!date^' + Math.floor(new Date() / 1000) + '^Last replied {date_long} at {time}|Last replied ' + new Date().toLocaleString() + '>'
 
                     let updateOptions = {
                         token: msg.meta.bot_token,

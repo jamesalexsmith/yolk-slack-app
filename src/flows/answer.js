@@ -5,6 +5,7 @@ module.exports = (app) => {
 	var lang_accepted_notification = require('../language/answer/accepted_notification.json')
 
 	slapp.action('answers_callback', 'accept', (msg, text) => {
+		// Post accepted response in Question thread
 		let acceptedMessage = JSON.parse(msg.body.actions[0].value)
 		let reply = lang_accepted_notification
 		reply.text = "_ <@" + msg.meta.user_id + '> has accepted a response from <@' + acceptedMessage.event.user + '>!_'
@@ -18,7 +19,7 @@ module.exports = (app) => {
 			text: reply.text,
 			attachments: reply.attachments,
 			thread_ts: acceptedMessage.event.thread_ts,
-			as_user: true
+			as_user: true,
 		}
 
 		slapp.client.chat.postMessage(msgOptions, (err, postData) => {
@@ -26,7 +27,9 @@ module.exports = (app) => {
 				console.log('Error posting accepted answer', err)
 				return
 			}
+			// Update the IM thread to show an accepted QA
 			updateImThread(msg, acceptedMessage)
+			// Update the channel thread to show an accepted QA
 		})
 	})
 	
