@@ -2,20 +2,11 @@
     "text": "_Got it! Here's your question:_",
     "attachments": [
         {
-            "callback_id": "answers_callback",
+            "callback_id": "delete_question_callback",
             "mrkdwn_in": ["text", "pretext", "fields"],
             "color": "#FDCE2E",
             "title": "",
-            "footer": "",
-            "actions": [
-                {
-                    "name": "delete",
-                    "style": "danger",
-                    "text": "Delete",
-                    "type": "button",
-                    "value": "delete"
-                }
-            ]
+            "footer": ""
         }
     ]
 }
