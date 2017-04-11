@@ -86,8 +86,7 @@ module.exports = function (app) {
                     text: 'New comment',
                     attachments: reply.attachments,
                     thread_ts: dm_thread_ts,
-                    as_user: true,
-                    reply_broadcast: true
+                    as_user: true
                 }
                 slapp.client.chat.postMessage(msgOptions, (err, data) => {
                     if (err) {
