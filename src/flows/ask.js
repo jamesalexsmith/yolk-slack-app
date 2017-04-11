@@ -116,15 +116,16 @@ module.exports = (app) => {
 						console.log('Error opening DM with user when asking question')
 						return
 					}
-					let reply = lang_notify_new_question
-					reply.attachments[0].title = state.question
-					reply.attachments[0].footer = '<!date^' + Math.floor(new Date() / 1000) + '^Posted {date_long} at {time}|Posted ' + new Date().toLocaleString() + '>'
+					let new_question = lang_notify_new_question
+					new_question.text = '_Got it! Here\'s your question:_'
+					new_question.attachments[0].title = state.question
+					new_question.attachments[0].footer = '<!date^' + Math.floor(new Date() / 1000) + '^Posted {date_long} at {time}|Posted ' + new Date().toLocaleString() + '>'
 					
 					let msgOptions = {
 						token: msg.meta.bot_token,
 						channel: imData.channel.id,
-						text: reply.text,
-						attachments: reply.attachments
+						text: new_question.text,
+						attachments: new_question.attachments
 					}
 
 					slapp.client.chat.postMessage(msgOptions, (err, postData) => {

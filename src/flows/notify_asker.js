@@ -2,8 +2,9 @@
 
 module.exports = function (app) {
     let slapp = app.slapp
-    var rp = require('request-promise')
-    var lang_notify_comment = require('../language/notify_asker/notify_comment.json')
+    let rp = require('request-promise')
+    let lang_notify_comment = require('../language/notify_asker/notify_comment.json')
+    let lang_notify_asker_new_question = require('../language/notify_asker/new_question.json')
 
     function deleteFirstHelperMessage(msg, helperMessage) {
         let delete_request = {
@@ -59,6 +60,7 @@ module.exports = function (app) {
 
     function messageAsker(msg, asker_username, threadedMessages) {
         // Open DM with asker, find the linked question in DM history, add to that thread with answer button
+        console.log(threadedMessages)
 
         // Get user id mentioned in the parent message
         let user_id = getUserIdFromMention(threadedMessages[0].attachments[0].title)
@@ -109,6 +111,49 @@ module.exports = function (app) {
                         return
                     }
                 })
+
+                // If this is the first response:
+                if (threadedMessages.length - 1 == 1) {
+                    let notification = lang_notify_asker_new_question
+                    notification.text = '_Someone commented! Click on the replies to see if we have your answer._'
+					notification.attachments = threadedMessages[0].attachments
+					notification.attachments[0].footer = '<!date^' + Math.floor(new Date() / 1000) + '^Replied {date_long} at {time}|Replied ' + new Date().toLocaleString() + '>'
+					
+					let updateOptions = {
+						token: msg.meta.bot_token,
+						channel: imData.channel.id,
+						text: notification.text,
+						attachments: notification.attachments,
+                        ts: dm_thread_ts
+					}
+                    slapp.client.chat.update(updateOptions, (err, postData) => {
+						if (err) {
+							console.log('Error notifying asker of new question', err)
+							return
+						}
+					})
+
+                // If this is the second response:
+                } else if (threadedMessages.length - 1 == 2){
+                    let notification = lang_notify_asker_new_question
+                    notification.text = '_A few people have commented now. Click on the replies to see if we have your answer._'
+					notification.attachments = threadedMessages[0].attachments
+					notification.attachments[0].footer = '<!date^' + Math.floor(new Date() / 1000) + '^Last replied {date_long} at {time}|Last replied ' + new Date().toLocaleString() + '>'
+					
+					let updateOptions = {
+						token: msg.meta.bot_token,
+						channel: imData.channel.id,
+						text: notification.text,
+						attachments: notification.attachments,
+                        ts: dm_thread_ts
+					}
+                    slapp.client.chat.update(updateOptions, (err, postData) => {
+						if (err) {
+							console.log('Error notifying asker of new question', err)
+							return
+						}
+					})
+                }
             })
         })
     }
@@ -174,6 +219,7 @@ module.exports = function (app) {
                 // Delete first bot helper message if present
                 if (msg.meta.bot_user_id === threadedMessages[1].user) {
                     deleteFirstHelperMessage(msg, threadedMessages[1])
+                    threadedMessages.splice(1, 1)
                 }
 
                 let asker_username = getAskerUsername(threadedMessages[0].attachments[0])
