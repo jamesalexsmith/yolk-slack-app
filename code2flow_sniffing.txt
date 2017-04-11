@@ -1,0 +1,34 @@
+Sniffing Flow;
+
+User asks channel a question;
+
+Yolk verifies it is a relevant question;
+
+Gather up to 5 responses after question as quick answers;
+
+if(Answer exists in Yolk?) {
+  Prepend to quick answers;
+  
+  if (Yolk had a correct answer?) {
+    Send data to us validating QA pair;
+    Give user protip to /yolk search or @yolk or DM Yolk;
+    Thread asked question saying Yolk gave a correct QA pair;
+    Send thanks to QA answerer;
+  } else {
+    loop quick_answer_accept;
+  }
+} else {
+  
+  quick_answer_accept:
+  if (Is a quick answer accepted?) {
+        Create QA pair;
+        Thread asked question saying Yolk gave a correct QA pair;
+    Send thanks to QA answerer;
+      } else {
+        if (User wants to post through Yolk?) {
+          Yolk posts;
+        } else {
+          Stop bothering user;
+        }
+      }
+}
