@@ -1,0 +1,21 @@
+{
+    "text": "_Got it! Here's your question:_",
+    "attachments": [
+        {
+            "mrkdwn_in": ["text", "pretext", "fields"],
+            "fallback": "Required plain-text summary of the attachment.",
+            "color": "#FDCE2E",
+            "title": "",
+            "footer": "",
+            "actions": [
+                {
+                    "name": "delete",
+                    "style": "danger",
+                    "text": "Delete",
+                    "type": "button",
+                    "value": "delete"
+                }
+            ]
+        }
+    ]
+}

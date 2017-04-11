@@ -12,6 +12,7 @@ module.exports = (app) => {
 	let lang_add_details_question = require('../language/post_question/add_details_question.json')
 	let lang_question_with_details = require('../language/post_question/question_with_details.json')
 	let lang_question_without_details = require('../language/post_question/question_without_details.json')
+	let lang_notify_new_question = require('../language/notify_asker/new_question.json')
 
 	function slackAPI(token) {
 		return new app.SlackWebClient(token);
@@ -115,12 +116,20 @@ module.exports = (app) => {
 						console.log('Error opening DM with user when asking question')
 						return
 					}
-					let ts = response.message.ts
-					let questionUrl = 'https://' + msg.meta.team_domain + '.slack.com/archives/' + msg.meta.channel_id + '/' + 'p' + ts.slice(0,10) + ts.slice(11, ts.length)
-					let text = 'Noticed you asked me to post a question: ' + questionUrl + '\n I\'ll keep you updated in here.'
-					slack.chat.postMessage(imData.channel.id, text, {as_user: true}, function (err, res) {
+					let reply = lang_notify_new_question
+					reply.attachments[0].title = state.question
+					reply.attachments[0].footer = '<!date^' + Math.floor(new Date() / 1000) + '^Posted {date_long} at {time}|Posted ' + new Date().toLocaleString() + '>'
+					
+					let msgOptions = {
+						token: msg.meta.bot_token,
+						channel: imData.channel.id,
+						text: reply.text,
+						attachments: reply.attachments
+					}
+
+					slapp.client.chat.postMessage(msgOptions, (err, postData) => {
 						if (err) {
-							console.log('Error linking question asked in DM', err)
+							console.log('Error notifying asker of new question', err)
 							return
 						}
 					})
