@@ -6,12 +6,12 @@ module.exports = (app) => {
 	let slapp = app.slapp
 	let smb = app.smb
 
-	let lang_ask_question = require('../language/ask_question.json')
-	let lang_ask_question_with_details = require('../language/ask_question_with_details.json')
-	let lang_cancelled_question = require('../language/cancelled_question.json')
-	let lang_add_details_question = require('../language/add_details_question.json')
-	let lang_question_with_details = require('../language/question_with_details.json')
-	let lang_question_without_details = require('../language/question_without_details.json')
+	let lang_ask_question = require('../language/post_question/ask_question.json')
+	let lang_ask_question_with_details = require('../language/post_question/ask_question_with_details.json')
+	let lang_cancelled_question = require('../language/post_question/cancelled_question.json')
+	let lang_add_details_question = require('../language/post_question/add_details_question.json')
+	let lang_question_with_details = require('../language/post_question/question_with_details.json')
+	let lang_question_without_details = require('../language/post_question/question_without_details.json')
 
 	function slackAPI(token) {
 		return new app.SlackWebClient(token);

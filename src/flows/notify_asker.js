@@ -3,7 +3,7 @@
 module.exports = function (app) {
     let slapp = app.slapp
     var rp = require('request-promise')
-    var lang_notify_comment = require('../language/notify_comment.json')
+    var lang_notify_comment = require('../language/notify_asker/notify_comment.json')
 
     function deleteFirstHelperMessage(msg, helperMessage) {
         let delete_request = {

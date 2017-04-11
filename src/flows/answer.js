@@ -27,8 +27,15 @@ module.exports = (app) => {
 				console.log('Error posting accepted answer', err)
 				return
 			}
+			updateImThread(msg, acceptedMessage)
 		})
 	})
+	
+	function updateImThread(msg, acceptedMessage) {
+		console.log(msg)
+		console.log('\n\naccepted message:\n')
+		console.log(acceptedMessage)
+	}
 
 	return {}
 }
