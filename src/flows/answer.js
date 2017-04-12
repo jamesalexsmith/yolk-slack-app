@@ -41,16 +41,15 @@ module.exports = (app) => {
 		let thread_ts = msg.body.original_message.thread_ts
 		let user_id = acceptedMessage.event.user
 		let answer = acceptedMessage.event.text
-		let app_token = msg.meta.app_token
 		let bot_token = msg.meta.bot_token
 
-		let historyOptions = getHistoryOptions(app_token, channel_id, thread_ts)
+		let historyOptions = getHistoryOptions(bot_token, channel_id, thread_ts)
 		slapp.client.im.history(historyOptions, (err, historyData) => {
 			if (err) {
 				console.log('Error fetching parent message when accepted for channel', err)
 				return
 			}
-
+			console.log(historyData.messages)
 			// If an answer was already accepted before
 			if (historyData.messages[0].text == '_The question is resolved!_') {
 				// Fetch previous answer, if the same don't update
