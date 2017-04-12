@@ -41,7 +41,54 @@ module.exports = (app) => {
 		let thread_ts = msg.body.original_message.thread_ts
 		let user_id = acceptedMessage.event.user
 		let answer = acceptedMessage.event.text
-		replaceQATitle(msg.meta.app_token, msg.meta.bot_token, channel_id, thread_ts, user_id, answer)
+		let app_token = msg.meta.app_token
+		let bot_token = msg.meta.bot_token
+
+		let historyOptions = {
+            token: app_token,
+            channel: channel_id,
+            latest: thread_ts,
+			inclusive: true,
+			count: 1
+        }
+		slapp.client.im.history(historyOptions, (err, historyData) => {
+			if (err) {
+				console.log('Error fetching parent message when accepted for channel', err)
+				return
+			}
+
+			// If an answer was already accepted before
+			if (historyData.messages[0].text == '_The question is resolved!_') {
+				// Fetch previous answer, if the same don't update
+				let prevAnswer = historyData.messages[0].attachments[0].title.match('Q:\\s(.*)\\\nA:\\s(.*)')[2]
+				var question = historyData.messages[0].attachments[0].title.match('Q:\\s(.*)\\\nA:\\s(.*)')[1]
+				if (prevAnswer == answer) {
+					return
+				}
+			} else {
+				// Fetch question from the original Yolk dm question text
+				var question = historyData.messages[0].attachments[0].title
+			}
+
+			let reply = lang_accepted_question_answer
+			reply.attachments[0].title = 'Q: ' + question + '\nA: ' + answer
+			reply.attachments[0].footer = 'Answered by <@' + user_id + '> on <!date^' + Math.floor(new Date() / 1000) + '^{date_long} at {time}|' + new Date().toLocaleString() + '>'
+
+			let updateOptions = {
+				token: bot_token,
+				channel: channel_id,
+				text: reply.text,
+				attachments: reply.attachments,
+				ts: thread_ts
+			}
+			slapp.client.chat.update(updateOptions, (err, postData) => {
+				if (err) {
+					console.log('Error notifying asker of new question', err)
+					return
+				}
+			})
+		})
+
 	}
 
 	function updateChannelThread(msg, acceptedMessage) {
@@ -49,11 +96,9 @@ module.exports = (app) => {
 		let thread_ts = acceptedMessage.event.thread_ts
 		let user_id = acceptedMessage.event.user
 		let answer = acceptedMessage.event.text
-		console.log(answer)
-		replaceQATitle(msg.meta.app_token, msg.meta.bot_token, channel_id, thread_ts, user_id, answer)
-	}
-
-	function replaceQATitle(app_token, bot_token, channel_id, thread_ts, user_id, answer) {
+		let app_token = msg.meta.app_token
+		let bot_token = msg.meta.bot_token
+		
 		let historyOptions = {
             token: app_token,
             channel: channel_id,
@@ -99,6 +144,7 @@ module.exports = (app) => {
 			})
 		})
 	}
+
 
 	return {}
 }
