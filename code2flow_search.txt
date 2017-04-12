@@ -1,0 +1,37 @@
+User has a question;
+if(User /yolk or @yolk and types question) {
+  
+  if(did YOLK find matches?) {
+    show_search_results:
+    Show results;
+    if(Dig in to an answer?) {
+        Open thread side panel;
+        found_answer:
+        if(Found answer?) {
+          Thank you message congratulating
+          user on finding the answer;
+        }
+        else {
+          loop next_page
+        }
+    
+  } else {
+    loop found_answer
+    
+    next_page:
+    if (next page?) {
+      fetch next page;
+      loop show_search_results;
+    } else {
+      quick_question_post:
+      if (Post question through yolk?) {
+        Yolk posts question;
+      } else {
+        dismiss;
+      }
+    }
+  }
+  } else {
+    loop quick_question_post
+  }
+}
