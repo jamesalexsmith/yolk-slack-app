@@ -32,7 +32,13 @@ module.exports = (app) => {
 		if (answer === 'cancel') {
 			var reply = lang_cancelled_question
 			reply.attachments[0].title = state.question
+			reply.text = '_Ok, not doing it. Whew that was close :cold_sweat:!_'
 			msg.respond(reply)
+			return
+		}
+
+		else if (answer === 'edit') {
+			msg.respond('_No problem!_\n_Type_ `/yolk ask` _YOUR QUESTION_')
 			return
 		}
 
