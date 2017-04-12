@@ -28,25 +28,36 @@ module.exports = (app) => {
 				console.log('Error posting accepted answer', err)
 				return
 			}
+			// TODO: send database Q&A pair
 			// Update the IM thread to show an accepted QA
 			updateImThread(msg, acceptedMessage)
 			// Update the channel thread to show an accepted QA
-			// TODO:
 			updateChannelThread(msg, acceptedMessage)
 		})
 	})
 	
 	function updateImThread(msg, acceptedMessage) {
-		// console.log(msg)
-		// console.log('\n\naccepted message:\n')
-		// console.log(acceptedMessage)
+		let channel_id = msg.body.channel.id
+		let thread_ts = msg.body.original_message.thread_ts
+		let user_id = acceptedMessage.event.user
+		let answer = acceptedMessage.event.text
+		replaceQATitle(msg.meta.app_token, msg.meta.bot_token, channel_id, thread_ts, user_id, answer)
 	}
 
 	function updateChannelThread(msg, acceptedMessage) {
+		let channel_id = acceptedMessage.event.channel
+		let thread_ts = acceptedMessage.event.thread_ts
+		let user_id = acceptedMessage.event.user
+		let answer = acceptedMessage.event.text
+		console.log(answer)
+		replaceQATitle(msg.meta.app_token, msg.meta.bot_token, channel_id, thread_ts, user_id, answer)
+	}
+
+	function replaceQATitle(app_token, bot_token, channel_id, thread_ts, user_id, answer) {
 		let historyOptions = {
-            token: msg.meta.app_token,
-            channel: acceptedMessage.event.channel,
-            latest: acceptedMessage.event.thread_ts,
+            token: app_token,
+            channel: channel_id,
+            latest: thread_ts,
 			inclusive: true,
 			count: 1
         }
@@ -56,19 +67,29 @@ module.exports = (app) => {
 				return
 			}
 
-			let question = historyData.messages[0].attachments[0].title.match('\\\n (.*)')[1]
-			let answer = acceptedMessage.event.text
+			// If an answer was already accepted before
+			if (historyData.messages[0].text == '_The question is resolved!_') {
+				// Fetch previous answer, if the same don't update
+				let prevAnswer = historyData.messages[0].attachments[0].title.match('Q:\\s(.*)\\\nA:\\s(.*)')[2]
+				var question = historyData.messages[0].attachments[0].title.match('Q:\\s(.*)\\\nA:\\s(.*)')[1]
+				if (prevAnswer == answer) {
+					return
+				}
+			} else {
+				// Fetch question from the original Yolk post question text
+				var question = historyData.messages[0].attachments[0].title.match('\\\n (.*)')[1]
+			}
 
 			let reply = lang_accepted_question_answer
 			reply.attachments[0].title = 'Q: ' + question + '\nA: ' + answer
-			reply.attachments[0].footer = 'Answered by <@' + acceptedMessage.event.user + '> on <!date^' + Math.floor(new Date() / 1000) + '^{date_long} at {time}|' + new Date().toLocaleString() + '>'
+			reply.attachments[0].footer = 'Answered by <@' + user_id + '> on <!date^' + Math.floor(new Date() / 1000) + '^{date_long} at {time}|' + new Date().toLocaleString() + '>'
 
 			let updateOptions = {
-				token: msg.meta.bot_token,
-				channel: acceptedMessage.event.channel,
+				token: bot_token,
+				channel: channel_id,
 				text: reply.text,
 				attachments: reply.attachments,
-				ts: acceptedMessage.event.thread_ts
+				ts: thread_ts
 			}
 			slapp.client.chat.update(updateOptions, (err, postData) => {
 				if (err) {
