@@ -4,6 +4,7 @@ module.exports = (app) => {
 	let slapp = app.slapp
 	let lang_accepted_notification = require('../language/answer/accepted_notification.json')
 	let lang_accepted_question_answer = require('../language/notify_asker/accepted_question_answer.json')
+	let lang_notify_comment = require('../language/notify_asker/notify_comment.json')
 
 	slapp.action('answers_callback', 'accept', (msg, text) => {
 		// Remove accepted button
@@ -11,8 +12,6 @@ module.exports = (app) => {
 		original_message.attachments[0].actions = []
 		original_message.attachments[0].fields[0].title = ':white_check_mark: accepted'
 		msg.respond(original_message)
-
-		// TODO RE-ADD ACCEPTED BUTTON ON OLD ANSWER
 
 		// Post accepted response in Question thread
 		let acceptedMessage = JSON.parse(msg.body.actions[0].value)
@@ -57,13 +56,18 @@ module.exports = (app) => {
 				console.log('Error fetching parent message when accepted for channel', err)
 				return
 			}
-			console.log(historyData.messages)
+
 			// If an answer was already accepted before
 			if (historyData.messages[0].text == '_The question is resolved!_') {
 				// Fetch previous answer, if the same don't update
-				let prevAnswer = getPreviousAnswer(historyData.messages[0].attachments[0].title)
+				let prevAnswerText = getPreviousAnswerText(historyData.messages[0].attachments[0].title)
 				var question = getQuestionAfterPaired(historyData.messages[0].attachments[0].title)
-				if (prevAnswer == answer) {
+				// Re-enable accepted button on previous answer
+				getMessageWithAnswer(historyData.messages[0].replies, answer)
+				// let original_message = msg.body.original_message
+				// original_message.attachments[0].actions = lang_notify_comment.attachments[0].actions
+				// msg.respond(msg.body.response_url, original_message)
+				if (prevAnswerText == answer) {
 					return
 				}
 			} else {
@@ -94,9 +98,9 @@ module.exports = (app) => {
 			// If an answer was already accepted before
 			if (historyData.messages[0].text == '_The question is resolved!_') {
 				// Fetch previous answer, if the same don't update
-				let prevAnswer = getPreviousAnswer(historyData.messages[0].attachments[0].title)
+				let prevAnswerText = getPreviousAnswerText(historyData.messages[0].attachments[0].title)
 				var question = getQuestionAfterPaired(historyData.messages[0].attachments[0].title)
-				if (prevAnswer == answer) {
+				if (prevAnswerText == answer) {
 					return
 				}
 			} else {
@@ -108,7 +112,7 @@ module.exports = (app) => {
 		})
 	}
 
-	function getPreviousAnswer(title) {
+	function getPreviousAnswerText(title) {
 		return title.match('Q:\\s(.*)\\\nA:\\s(.*)')[2]
 	}
 
@@ -144,6 +148,12 @@ module.exports = (app) => {
 				return
 			}
 		})
+	}
+
+	function getMessageWithAnswer(messages, answer) {
+		console.log(messages)
+		console.log(messages[1])
+		console.log(answer)
 	}
 
 	return {}
