@@ -5,13 +5,6 @@
             "mrkdwn_in": ["text", "pretext", "fields"],
             "color": "#FDCE2E",
             "title": "Where is the product sheet?",
-            "footer": "Asked",
-            "fields": [
-                {
-                    "value": "```Do you have any more details you'd like to include?```",
-                    "short": true
-                }
-            ],
             "actions": [
                 {
                     "name": "post",
@@ -19,6 +12,12 @@
                     "text": "I'm good, post now",
                     "type": "button",
                     "value": "post"
+                },
+                {
+                    "name": "edit",
+                    "text": "Edit",
+                    "type": "button",
+                    "value": "edit"
                 },
                 {
                     "name": "cancel",
