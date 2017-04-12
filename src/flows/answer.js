@@ -44,13 +44,7 @@ module.exports = (app) => {
 		let app_token = msg.meta.app_token
 		let bot_token = msg.meta.bot_token
 
-		let historyOptions = {
-            token: app_token,
-            channel: channel_id,
-            latest: thread_ts,
-			inclusive: true,
-			count: 1
-        }
+		let historyOptions = getHistoryOptions(app_token, channel_id, thread_ts)
 		slapp.client.im.history(historyOptions, (err, historyData) => {
 			if (err) {
 				console.log('Error fetching parent message when accepted for channel', err)
@@ -60,8 +54,8 @@ module.exports = (app) => {
 			// If an answer was already accepted before
 			if (historyData.messages[0].text == '_The question is resolved!_') {
 				// Fetch previous answer, if the same don't update
-				let prevAnswer = historyData.messages[0].attachments[0].title.match('Q:\\s(.*)\\\nA:\\s(.*)')[2]
-				var question = historyData.messages[0].attachments[0].title.match('Q:\\s(.*)\\\nA:\\s(.*)')[1]
+				let prevAnswer = getPreviousAnswer(historyData.messages[0].attachments[0].title)
+				var question = getQuestionAfterPaired(historyData.messages[0].attachments[0].title)
 				if (prevAnswer == answer) {
 					return
 				}
@@ -70,23 +64,7 @@ module.exports = (app) => {
 				var question = historyData.messages[0].attachments[0].title
 			}
 
-			let reply = lang_accepted_question_answer
-			reply.attachments[0].title = 'Q: ' + question + '\nA: ' + answer
-			reply.attachments[0].footer = 'Answered by <@' + user_id + '> on <!date^' + Math.floor(new Date() / 1000) + '^{date_long} at {time}|' + new Date().toLocaleString() + '>'
-
-			let updateOptions = {
-				token: bot_token,
-				channel: channel_id,
-				text: reply.text,
-				attachments: reply.attachments,
-				ts: thread_ts
-			}
-			slapp.client.chat.update(updateOptions, (err, postData) => {
-				if (err) {
-					console.log('Error notifying asker of new question', err)
-					return
-				}
-			})
+			updateQuestionPost(question, answer, bot_token, user_id, channel_id, thread_ts)
 		})
 
 	}
@@ -99,13 +77,7 @@ module.exports = (app) => {
 		let app_token = msg.meta.app_token
 		let bot_token = msg.meta.bot_token
 		
-		let historyOptions = {
-            token: app_token,
-            channel: channel_id,
-            latest: thread_ts,
-			inclusive: true,
-			count: 1
-        }
+		let historyOptions = getHistoryOptions(app_token, channel_id, thread_ts)
 		slapp.client.channels.history(historyOptions, (err, historyData) => {
 			if (err) {
 				console.log('Error fetching parent message when accepted for channel', err)
@@ -115,8 +87,8 @@ module.exports = (app) => {
 			// If an answer was already accepted before
 			if (historyData.messages[0].text == '_The question is resolved!_') {
 				// Fetch previous answer, if the same don't update
-				let prevAnswer = historyData.messages[0].attachments[0].title.match('Q:\\s(.*)\\\nA:\\s(.*)')[2]
-				var question = historyData.messages[0].attachments[0].title.match('Q:\\s(.*)\\\nA:\\s(.*)')[1]
+				let prevAnswer = getPreviousAnswer(historyData.messages[0].attachments[0].title)
+				var question = getQuestionAfterPaired(historyData.messages[0].attachments[0].title)
 				if (prevAnswer == answer) {
 					return
 				}
@@ -125,26 +97,47 @@ module.exports = (app) => {
 				var question = historyData.messages[0].attachments[0].title.match('\\\n (.*)')[1]
 			}
 
-			let reply = lang_accepted_question_answer
-			reply.attachments[0].title = 'Q: ' + question + '\nA: ' + answer
-			reply.attachments[0].footer = 'Answered by <@' + user_id + '> on <!date^' + Math.floor(new Date() / 1000) + '^{date_long} at {time}|' + new Date().toLocaleString() + '>'
-
-			let updateOptions = {
-				token: bot_token,
-				channel: channel_id,
-				text: reply.text,
-				attachments: reply.attachments,
-				ts: thread_ts
-			}
-			slapp.client.chat.update(updateOptions, (err, postData) => {
-				if (err) {
-					console.log('Error notifying asker of new question', err)
-					return
-				}
-			})
+			updateQuestionPost(question, answer, bot_token, user_id, channel_id, thread_ts)
 		})
 	}
 
+	function getPreviousAnswer(title) {
+		return title.match('Q:\\s(.*)\\\nA:\\s(.*)')[2]
+	}
+
+	function getQuestionAfterPaired(title) {
+		return title.match('Q:\\s(.*)\\\nA:\\s(.*)')[1]
+	}
+
+	function getHistoryOptions(app_token, channel_id, thread_ts) {
+		return {
+            token: app_token,
+            channel: channel_id,
+            latest: thread_ts,
+			inclusive: true,
+			count: 1
+        }
+	}
+
+	function updateQuestionPost(question, answer, bot_token, user_id, channel_id, thread_ts) {
+		let reply = lang_accepted_question_answer
+		reply.attachments[0].title = 'Q: ' + question + '\nA: ' + answer
+		reply.attachments[0].footer = 'Answered by <@' + user_id + '> on <!date^' + Math.floor(new Date() / 1000) + '^{date_long} at {time}|' + new Date().toLocaleString() + '>'
+
+		let updateOptions = {
+			token: bot_token,
+			channel: channel_id,
+			text: reply.text,
+			attachments: reply.attachments,
+			ts: thread_ts
+		}
+		slapp.client.chat.update(updateOptions, (err, postData) => {
+			if (err) {
+				console.log('Error notifying asker of new question', err)
+				return
+			}
+		})
+	}
 
 	return {}
 }
