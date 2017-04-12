@@ -21,7 +21,7 @@ module.exports = function (app) {
     }
 
     function getUserIdFromMention(text) {
-        return text.match('<@(.*)\\|(.*)>')[2]
+        return text.match('<@(.*)>')[1]
     }
 
     function getTimestampWithoutDecimal(ts) {
@@ -44,7 +44,7 @@ module.exports = function (app) {
         }
     }
 
-    function messageAsker(msg, asker_username, threadedMessages) {
+    function messageAsker(msg, threadedMessages) {
         // Open DM with asker, find the linked question in DM history, add to that thread with answer button
 
         // Get user id mentioned in the parent message
@@ -141,10 +141,6 @@ module.exports = function (app) {
         })
     }
 
-    function getAskerUsername(attachment) {
-        return attachment.title.match('@(.+?(?=\\|))')[0].substr(1)
-    }
-
     function getQuestionText(attachment) {
         return attachment.title.match('has a question: \\n(.*)')[1]
     }
@@ -204,9 +200,7 @@ module.exports = function (app) {
                     deleteFirstHelperMessage(msg, threadedMessages[1])
                     threadedMessages.splice(1, 1)
                 }
-
-                let asker_username = getAskerUsername(threadedMessages[0].attachments[0])
-                messageAsker(msg, asker_username, threadedMessages) // FOR TESTING
+                messageAsker(msg, threadedMessages)
             })
 
             .catch(function (err) {

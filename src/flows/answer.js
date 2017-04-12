@@ -6,6 +6,14 @@ module.exports = (app) => {
 	let lang_accepted_question_answer = require('../language/notify_asker/accepted_question_answer.json')
 
 	slapp.action('answers_callback', 'accept', (msg, text) => {
+		// Remove accepted button
+		let original_message = msg.body.original_message
+		original_message.attachments[0].actions = []
+		original_message.attachments[0].fields[0].title = ':white_check_mark: accepted'
+		msg.respond(original_message)
+
+		// TODO RE-ADD ACCEPTED BUTTON ON OLD ANSWER
+
 		// Post accepted response in Question thread
 		let acceptedMessage = JSON.parse(msg.body.actions[0].value)
 		let reply = lang_accepted_notification
@@ -120,7 +128,7 @@ module.exports = (app) => {
 
 	function updateQuestionPost(question, answer, bot_token, user_id, channel_id, thread_ts) {
 		let reply = lang_accepted_question_answer
-		reply.attachments[0].title = 'Q: ' + question + '\nA: ' + answer
+		reply.attachments[0].title = '<@' + user_id +'> had a question\nQ: ' + question + '\nA: ' + answer
 		reply.attachments[0].footer = 'Answered by <@' + user_id + '> on <!date^' + Math.floor(new Date() / 1000) + '^{date_long} at {time}|' + new Date().toLocaleString() + '>'
 
 		let updateOptions = {
