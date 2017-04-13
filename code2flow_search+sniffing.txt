@@ -7,15 +7,17 @@ if(Did a user /yolk or DM @yolk?) {
         Open thread side panel;
         found_answer:
         if(Found answer?) {
-          Thank you message congratulating
+          Send thank you message congratulating
           user on finding the answer;
+          Send data to us validating QA pair;
         }
         else {
           loop next_page
         }
     
-  } else {
-    loop found_answer
+    } 
+    else {
+      loop found_answer
     
     next_page:
     if (next page?) {
@@ -43,11 +45,19 @@ Gather up to 5 responses after question as quick answers;
 
 if(Answer exists in Yolk?) {
   Prepend to quick answers;
+  if(Dig in to an answer?) {
+        Open thread side panel;
+          loop correct_answer;
+        
+    
+    }
   
+  correct_answer:
   if (Yolk had a correct answer?) {
     Send thank you message congratulating user on finding the answer;
     Send data to us validating QA pair;
-    Give user protip to /yolk search or DM @olk;
+    Give user protip to /yolk search or DM @yolk;
+    return;
     Thread asked question saying Yolk gave a correct QA pair;
     Send thanks to QA answerer;
   } else {
@@ -69,5 +79,3 @@ if(Answer exists in Yolk?) {
       }
 }
   }
-  
-
