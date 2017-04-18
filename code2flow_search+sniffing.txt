@@ -1,0 +1,81 @@
+User asks a question;
+if(Did a user /yolk or DM @yolk?) {
+  if(did YOLK find matches?) {
+    show_search_results:
+    Show results;
+    if(Dig in to an answer?) {
+        Open thread side panel;
+        found_answer:
+        if(Found answer?) {
+          Send thank you message congratulating
+          user on finding the answer;
+          Send data to us validating QA pair;
+        }
+        else {
+          loop next_page
+        }
+    
+    } 
+    else {
+      loop found_answer
+    
+    next_page:
+    if (next page?) {
+      fetch next page;
+      loop show_search_results;
+    } else {
+      quick_question_post:
+      if (Post question through yolk?) {
+        Yolk posts question;
+      } else {
+        dismiss;
+      }
+    }
+  }
+  } else {
+    loop quick_question_post
+  }
+  }
+  else {
+    YOLK sniffs question in channel;
+
+Yolk verifies it is a relevant question;
+
+Gather up to 5 responses after question as quick answers;
+
+if(Answer exists in Yolk?) {
+  Prepend to quick answers;
+  if(Dig in to an answer?) {
+        Open thread side panel;
+          loop correct_answer;
+        
+    
+    }
+  
+  correct_answer:
+  if (Yolk had a correct answer?) {
+    Send thank you message congratulating user on finding the answer;
+    Send data to us validating QA pair;
+    Give user protip to /yolk search or DM @yolk;
+    return;
+    Thread asked question saying Yolk gave a correct QA pair;
+    Send thanks to QA answerer;
+  } else {
+    loop quick_answer_accept;
+  }
+} else {
+  
+  quick_answer_accept:
+  if (Is a quick answer accepted?) {
+        Create QA pair;
+        Thread asked question saying Yolk gave a correct QA pair;
+    Send thanks to QA answerer;
+      } else {
+        if (User wants to post through Yolk?) {
+          Yolk posts;
+        } else {
+          Stop bothering user;
+        }
+      }
+}
+  }

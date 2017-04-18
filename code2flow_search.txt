@@ -1,6 +1,7 @@
-User has a question;
-if(User /yolk or @yolk and types question) {
-  
+User asks a question;
+if(Did a user /yolk or DM @yolk?) {
+  find_matches:
+nop;
   if(did YOLK find matches?) {
     show_search_results:
     Show results;
@@ -34,4 +35,8 @@ if(User /yolk or @yolk and types question) {
   } else {
     loop quick_question_post
   }
-}
+  }
+  else {
+    YOLK sniffs question in channel;
+    goto find_matches;
+  }
