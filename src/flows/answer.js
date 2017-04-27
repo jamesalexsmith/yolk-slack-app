@@ -46,7 +46,7 @@ module.exports = (app) => {
 	function updateImThread(msg, acceptedMessage) {
 		let channel_id = msg.body.channel.id
 		let thread_ts = msg.body.original_message.thread_ts
-		let user_id = acceptedMessage.event.user
+		let user_id = msg.meta.user_id
 		let answer = acceptedMessage.event.text
 		let bot_token = msg.meta.bot_token
 
@@ -62,11 +62,7 @@ module.exports = (app) => {
 				// Fetch previous answer, if the same don't update
 				let prevAnswerText = getPreviousAnswerText(historyData.messages[0].attachments[0].title)
 				var question = getQuestionAfterPaired(historyData.messages[0].attachments[0].title)
-				// Re-enable accepted button on previous answer
-				getMessageWithAnswer(historyData.messages[0].replies, answer)
-				// let original_message = msg.body.original_message
-				// original_message.attachments[0].actions = lang_notify_comment.attachments[0].actions
-				// msg.respond(msg.body.response_url, original_message)
+				
 				if (prevAnswerText == answer) {
 					return
 				}
@@ -83,7 +79,7 @@ module.exports = (app) => {
 	function updateChannelThread(msg, acceptedMessage) {
 		let channel_id = acceptedMessage.event.channel
 		let thread_ts = acceptedMessage.event.thread_ts
-		let user_id = acceptedMessage.event.user
+		let user_id = msg.meta.user_id
 		let answer = acceptedMessage.event.text
 		let app_token = msg.meta.app_token
 		let bot_token = msg.meta.bot_token
@@ -148,12 +144,6 @@ module.exports = (app) => {
 				return
 			}
 		})
-	}
-
-	function getMessageWithAnswer(messages, answer) {
-		console.log(messages)
-		console.log(messages[1])
-		console.log(answer)
 	}
 
 	return {}
