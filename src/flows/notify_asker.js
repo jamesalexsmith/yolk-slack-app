@@ -21,7 +21,7 @@ module.exports = function (app) {
     }
 
     function getUserIdFromMention(text) {
-        return text.match('<@(.*)>')[1]
+        return text.match('<@(.*)\\|(.*)>')[2]
     }
 
     function getTimestampWithoutDecimal(ts) {
