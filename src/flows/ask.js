@@ -43,7 +43,7 @@ module.exports = (app) => {
 		}
 
 		else if (answer === 'post') {
-			var userMention = '<@' + msg.body.user.name + '|' + msg.body.user.id + '>'
+			var userMention = '<@' + msg.body.user.id + '>'
 			var channelMention = '<!channel|channel>'
 			var reply = lang_post_question
 
