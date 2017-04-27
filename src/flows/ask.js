@@ -70,6 +70,21 @@ module.exports = (app) => {
 					return
 				}
 				var response = res
+				let question_ts = response.message.ts
+
+				// Thread the question in the channel
+				var data = {
+					username: "yolk",
+					thread_ts: question_ts,
+					as_user: true
+				}
+
+				slack.chat.postMessage(channel_id, 'Lets get this conversation started!', data, function (err, res) {
+					if (err) {
+						console.log('Error:', err)
+						return
+					}
+				});
 
 				// Post question in DM
 				let imOptions = {
@@ -98,24 +113,25 @@ module.exports = (app) => {
 							console.log('Error notifying asker of new question', err)
 							return
 						}
+
+
+						// Thread the mirrored question in the dm giving them hyper link to original question
+						let questionUrl = 'https://' + msg.meta.team_domain + '.slack.com/archives/' + msg.meta.channel_id + '/p' + question_ts.replace('.','')
+						let dmThreadedMsgOptions = {
+							token: msg.meta.bot_token,
+							channel: imData.channel.id,
+							text: 'If you would like to post your own answer click <' + questionUrl + '|here>!',
+							thread_ts: postData.ts,
+						}
+						slapp.client.chat.postMessage(dmThreadedMsgOptions, (err, postData) => {
+							if (err) {
+								console.log('Error linking original question in mirrored dm', err)
+								return
+							}
+						})
 					})
 				})
-
-				// Thread the question in the channel
-				var data = {
-					username: "yolk",
-					thread_ts: response.message.ts,
-					as_user: true
-				}
-
-				slack.chat.postMessage(channel_id, 'Lets get this conversation started!', data, function (err, res) {
-					if (err) {
-						console.log('Error:', err)
-						return
-					}
-				});
 			});
-
 		}
 	})
 

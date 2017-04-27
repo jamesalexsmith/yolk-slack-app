@@ -99,6 +99,7 @@ module.exports = function (app) {
                 if (threadedMessages.length - 1 == 1) {
                     // Update the notification text
                     let notification = lang_notify_asker_new_question
+                    // notification.title = '_Got it! Here\'s your <' + questionUrl + '|question:_'
                     notification.text = '_Someone commented! Click on the replies to see if we have your answer._'
                     notification.attachments = imSearchData.messages[imSearchData.messages.length - 1].attachments
 
