@@ -5,6 +5,7 @@ const messageBuilder = require('slapp/src/message')
 module.exports = (app) => {
 	let slapp = app.slapp
 	let smb = app.smb
+	let db = require('../services/database')(app)
 
 	let lang_ask_question_confirmation = require('../language/post_question/ask_question_confirmation.json')
 	let lang_cancelled_question = require('../language/post_question/cancelled_question.json')
@@ -134,6 +135,19 @@ module.exports = (app) => {
 			});
 		}
 	})
+
+	function createQuestionModelContents(msg, question) {
+		return {
+			question: String,
+			comments: [],
+			author_user_id: String,
+			reactions: [],
+			channel_id: String,
+			team_id: String,
+			answered: Boolean,
+			timestamp: Date
+		}
+	}
 
 	return {}
 }
