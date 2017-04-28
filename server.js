@@ -45,12 +45,15 @@ var conn = mongoose.connection
 conn.on('error', console.error.bind(console, 'connection error:'))
 
 conn.once('open', function () {
+	// Create models and schemas
+	const db = require('./src/services/database')(mongoose)
 	var app = {
 		slapp,
 		server,
 		SlackWebClient,
 		smb,
-		mongoose
+		mongoose,
+		db
 	}
 
 	// Conversation flows

@@ -1,6 +1,7 @@
 'use strict'
 
 module.exports = function (app) {
+    let db = app.db
     let slapp = app.slapp
     let rp = require('request-promise')
     let lang_notify_comment = require('../language/notify_asker/notify_comment.json')
@@ -177,8 +178,26 @@ module.exports = function (app) {
         })
     }
 
+    function createQuestionCommentModelContents(msg) {
+        return {
+            comment: msg.body.event.text,
+            user_id: msg.meta.user_id,
+            accepted: false,
+            timestamp: msg.body.event.ts,
+            date: new Date()
+        }
+    }
+
     return function (msg) {
         initializeThumbsUpAndDown(msg)
+
+        let commentContents = createQuestionCommentModelContents(msg)
+        let questionQuery = {
+            team_id: msg.meta.team_id,
+            channel_id: msg.meta.channel_id,
+            timestamp: msg.body.event.thread_ts
+        }
+        db.updateQuestion(questionQuery, {$push: {comments: commentContents}})
 
         // Need to use API directly since smallwins/slack is on version 7.5.*
         let repliesOptions = {

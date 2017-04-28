@@ -1,7 +1,6 @@
 'use strict'
 
-module.exports = (app) => {
-    var mongoose = app.mongoose
+module.exports = (mongoose) => {
     var Schema = mongoose.Schema;
 
     // Schemas
@@ -11,6 +10,7 @@ module.exports = (app) => {
             comment: String,
             user_id: String,
             accepted: Boolean,
+            timestamp: String,
             date: Date,
             reactions: {
                 reaction: String,
@@ -26,19 +26,21 @@ module.exports = (app) => {
         team_id: String,
         team_name: String,
         answered: Boolean,
-        timestamp: Date
+        timestamp: String,
+        date: Date
     })
 
     var validationSchema = new Schema({
         question_searched: String,
-        relevent_question_timestamp_accepted: Date,
+        relevent_question_timestamp_accepted: String,
         relevent_questions_timestamp_ignored: [{
-            timestamp: Date
+            timestamp: String
         }],
         user_id: String,
         team_id: String,
         channel_id: String,
-        timestamp: Date
+        timestamp: String,
+        date: Date
     })
 
     // Models
@@ -49,9 +51,9 @@ module.exports = (app) => {
     var methods = {}
 
     methods.updateQuestion = function(query, update) {
-        MyModel.findOneAndUpdate(query, update, {
-            upsert: true
-        }, function (err, doc) {
+        console.log('herehhrrheh')
+        Question.findOneAndUpdate(query, update, function (err, doc) {
+            console.log('doc', doc)
             if (err) {
                 console.log('Error updating question in mongodb', err)
             }

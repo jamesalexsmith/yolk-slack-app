@@ -3,9 +3,9 @@ const slack = require('slack')
 const messageBuilder = require('slapp/src/message')
 
 module.exports = (app) => {
-	let slapp = app.slapp
+	let db = app.db
 	let smb = app.smb
-	let db = require('../services/database')(app)
+	let slapp = app.slapp
 
 	let lang_ask_question_confirmation = require('../language/post_question/ask_question_confirmation.json')
 	let lang_cancelled_question = require('../language/post_question/cancelled_question.json')
@@ -133,7 +133,6 @@ module.exports = (app) => {
 
 				// Post the contents into the database
 				let contents = createQuestionModelContents(msg, state.question, question_ts)
-				console.log(contents)
 				db.saveQuestion(contents)
 			})
 		}
@@ -149,7 +148,8 @@ module.exports = (app) => {
 			team_id: msg.meta.team_id,
 			team_name: msg.meta.team_name,
 			answered: false,
-			timestamp: Date(timestamp)
+			timestamp: timestamp,
+			date: new Date()
 		}
 	}
 
