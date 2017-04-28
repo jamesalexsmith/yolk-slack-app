@@ -65,12 +65,11 @@ module.exports = (app) => {
 			reply.as_user = true
 
 			// Post question in channel
-			slack.chat.postMessage(channel_id, reply.text, reply, function (err, res) {
+			slack.chat.postMessage(channel_id, reply.text, reply, function (err, response) {
 				if (err) {
 					console.log('Error:', err)
 					return
 				}
-				var response = res
 				let question_ts = response.message.ts
 
 				// Thread the question in the channel
@@ -79,7 +78,6 @@ module.exports = (app) => {
 					thread_ts: question_ts,
 					as_user: true
 				}
-
 				slack.chat.postMessage(channel_id, 'Lets get this conversation started!', data, function (err, res) {
 					if (err) {
 						console.log('Error:', err)
@@ -132,20 +130,26 @@ module.exports = (app) => {
 						})
 					})
 				})
-			});
+
+				// Post the contents into the database
+				let contents = createQuestionModelContents(msg, state.question, question_ts)
+				console.log(contents)
+				db.saveQuestion(contents)
+			})
 		}
 	})
 
-	function createQuestionModelContents(msg, question) {
+	function createQuestionModelContents(msg, question, timestamp) {
 		return {
-			question: String,
+			question: question,
 			comments: [],
-			author_user_id: String,
+			author_user_id: msg.meta.user_id,
 			reactions: [],
-			channel_id: String,
-			team_id: String,
-			answered: Boolean,
-			timestamp: Date
+			channel_id: msg.meta.channel_id,
+			team_id: msg.meta.team_id,
+			team_name: msg.meta.team_name,
+			answered: false,
+			timestamp: Date(timestamp)
 		}
 	}
 

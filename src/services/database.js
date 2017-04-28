@@ -24,6 +24,7 @@ module.exports = (app) => {
         }],
         channel_id: String,
         team_id: String,
+        team_name: String,
         answered: Boolean,
         timestamp: Date
     })
