@@ -1,5 +1,6 @@
 {
     "text": "_The question is resolved!_",
+    "fallback": "The question is resolved!",
     "attachments": [{
         "color": "#FDCE2E",
         "title": "",
