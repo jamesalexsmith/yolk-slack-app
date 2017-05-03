@@ -51,9 +51,7 @@ module.exports = (mongoose) => {
     var methods = {}
 
     methods.updateQuestion = function(query, update) {
-        console.log('herehhrrheh')
         Question.findOneAndUpdate(query, update, function (err, doc) {
-            console.log('doc', doc)
             if (err) {
                 console.log('Error updating question in mongodb', err)
             }

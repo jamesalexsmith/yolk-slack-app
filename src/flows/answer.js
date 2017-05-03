@@ -1,6 +1,7 @@
 'use strict'
 
 module.exports = (app) => {
+	let db = app.db
 	let slapp = app.slapp
 	let lang_accepted_notification = require('../language/answer/accepted_notification.json')
 	let lang_accepted_question_answer = require('../language/notify_asker/accepted_question_answer.json')
@@ -42,7 +43,7 @@ module.exports = (app) => {
 			updateChannelThread(msg, acceptedMessage)
 		})
 	})
-	
+
 	function updateImThread(msg, acceptedMessage) {
 		let channel_id = msg.body.channel.id
 		let thread_ts = msg.body.original_message.thread_ts
@@ -62,7 +63,7 @@ module.exports = (app) => {
 				// Fetch previous answer, if the same don't update
 				let prevAnswerText = getPreviousAnswerText(historyData.messages[0].attachments[0].title)
 				var question = getQuestionAfterPaired(historyData.messages[0].attachments[0].title)
-				
+
 				if (prevAnswerText == answer) {
 					return
 				}
@@ -83,7 +84,7 @@ module.exports = (app) => {
 		let answer = acceptedMessage.event.text
 		let app_token = msg.meta.app_token
 		let bot_token = msg.meta.bot_token
-		
+
 		let historyOptions = getHistoryOptions(app_token, channel_id, thread_ts)
 		slapp.client.channels.history(historyOptions, (err, historyData) => {
 			if (err) {
@@ -105,6 +106,7 @@ module.exports = (app) => {
 			}
 
 			updateQuestionPost(question, answer, bot_token, user_id, channel_id, thread_ts)
+			dbUpdateComment(msg, channel_id, thread_ts, answer)
 		})
 	}
 
@@ -118,17 +120,17 @@ module.exports = (app) => {
 
 	function getHistoryOptions(app_token, channel_id, thread_ts) {
 		return {
-            token: app_token,
-            channel: channel_id,
-            latest: thread_ts,
+			token: app_token,
+			channel: channel_id,
+			latest: thread_ts,
 			inclusive: true,
 			count: 1
-        }
+		}
 	}
 
 	function updateQuestionPost(question, answer, bot_token, user_id, channel_id, thread_ts) {
 		let reply = lang_accepted_question_answer
-		reply.attachments[0].title = '<@' + user_id +'> had a question\nQ: ' + question + '\nA: ' + answer
+		reply.attachments[0].title = '<@' + user_id + '> had a question\nQ: ' + question + '\nA: ' + answer
 		reply.attachments[0].footer = 'Answered by <@' + user_id + '> on <!date^' + Math.floor(new Date() / 1000) + '^{date_long} at {time}|' + new Date().toLocaleString() + '>'
 
 		let updateOptions = {
@@ -144,6 +146,28 @@ module.exports = (app) => {
 				return
 			}
 		})
+	}
+
+	function dbUpdateComment(msg, channel_id, thread_ts, answer) {  
+		// Mark the relevant comment as accepted
+		let commentQuery = {
+		    'team_id': msg.meta.team_id,
+		    'channel_id': channel_id,
+		    'timestamp': thread_ts,
+			'comments.comment': answer
+		}
+		// TODO Searching for comment by text so always find the latest one
+		let updateCommentQuery = {$set: {'comments.$.accepted': true}}
+		db.updateQuestion(commentQuery, updateCommentQuery)
+
+		// Mark the parent question as answered
+		let questionQuery = {
+		    'team_id': msg.meta.team_id,
+		    'channel_id': channel_id,
+		    'timestamp': thread_ts,
+		}
+		let updateQuestionQuery = {$set: {'answered': true}}
+		db.updateQuestion(questionQuery, updateQuestionQuery)
 	}
 
 	return {}
