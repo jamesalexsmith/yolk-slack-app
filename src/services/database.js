@@ -30,6 +30,8 @@ module.exports = (mongoose) => {
         date: Date
     })
 
+    questionSchema.index({'$**': 'text'});
+
     var validationSchema = new Schema({
         question_searched: String,
         relevent_question_timestamp_accepted: String,
@@ -43,12 +45,16 @@ module.exports = (mongoose) => {
         date: Date
     })
 
+    validationSchema.index({'$**': 'text'});
+
     // Models
     var Question = mongoose.model('Question', questionSchema)
     var Validation = mongoose.model('Validation', validationSchema)
 
     // Methods
     var methods = {}
+    methods.Question = Question
+    methods.Validation = Validation
 
     methods.updateQuestion = function(query, update) {
         Question.findOneAndUpdate(query, update, function (err, doc) {

@@ -1,0 +1,20 @@
+{
+    "text": "_Which channel would you like to post the question to?_",
+    "response_type": "ephemeral",
+    "attachments": [
+        {
+            "fallback": "Upgrade your Slack client to use messages like these.",
+            "color": "#FDCE2E",
+            "attachment_type": "default",
+            "callback_id": "test",
+            "actions": [
+                {
+                    "name": "channels_list",
+                    "text": "_Which channel would you like to post the question to?_",
+                    "type": "select",
+                    "data_source": "channels"
+                }
+            ]
+        }
+    ]
+}

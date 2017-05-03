@@ -7,6 +7,7 @@ module.exports = (app) => {
 	let smb = app.smb
 	let slapp = app.slapp
 
+	let lang_choose_channel = require('../language/post_question/choose_channel.json')
 	let lang_ask_question_confirmation = require('../language/post_question/ask_question_confirmation.json')
 	let lang_cancelled_question = require('../language/post_question/cancelled_question.json')
 	let lang_post_question = require('../language/post_question/post_question.json')
@@ -61,6 +62,13 @@ module.exports = (app) => {
 			var token = msg.meta.bot_token || msg.meta.app_token
 			var slack = slackAPI(token)
 			var channel_id = msg.meta.channel_id
+
+			// If channel is in an IM use a dropdown to ask which channel to post it into
+			if (channel_id[0] === 'D') {
+				msg.route('choose_channel', state)
+				return
+			}
+
 			reply.username = 'yolk'
 			reply.as_user = true
 
@@ -136,6 +144,16 @@ module.exports = (app) => {
 				db.saveQuestion(contents)
 			})
 		}
+	})
+
+	slapp.route('choose_channel', (msg, state) => {
+		let reply = lang_choose_channel
+		state.answer = 'post'
+		state.channel = 'TEST'
+		console.log(reply)
+		msg
+			.respond(reply)
+			.route('ask_confirmation', state)
 	})
 
 	function createQuestionModelContents(msg, question, timestamp) {
