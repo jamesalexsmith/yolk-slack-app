@@ -106,7 +106,7 @@ module.exports = (app) => {
 			}
 
 			updateQuestionPost(question, answer, bot_token, user_id, channel_id, thread_ts)
-			dbUpdateComment(msg, channel_id, thread_ts, answer)
+			dbUpdateComment(msg, user_id, channel_id, thread_ts, answer)
 		})
 	}
 
@@ -148,7 +148,7 @@ module.exports = (app) => {
 		})
 	}
 
-	function dbUpdateComment(msg, channel_id, thread_ts, answer) {
+	function dbUpdateComment(msg, user_id, channel_id, thread_ts, answer) {
 		// Mark the relevant comment as accepted
 		let commentQuery = {
 			'team_id': msg.meta.team_id,
@@ -161,6 +161,8 @@ module.exports = (app) => {
 			$set: {
 				'comments.$.accepted': true,
 				'comments.$.accepted_at': Date(),
+				'latest_accepted_answer': answer,
+				'latest_accepted_user_id': user_id,
 				'answered': true,
 				'answered_at': Date()
 			}

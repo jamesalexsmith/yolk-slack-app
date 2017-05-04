@@ -1,0 +1,22 @@
+{
+    "callback_id": "validation",
+    "color": "#FDCE2E",
+    "title": "",
+    "title_link": "",
+    "text": "",
+    "footer": "",
+    "fields": [{
+        "value": "",
+        "short": "true"
+    }, {
+        "value": "",
+        "short": "true"
+    }],
+    "actions": [{
+        "name": "validate",
+        "style": "primary",
+        "text": ":+1:",
+        "type": "button",
+        "value": ""
+    }]
+}

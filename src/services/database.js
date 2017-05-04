@@ -6,6 +6,8 @@ module.exports = (mongoose) => {
     // Schemas
     var questionSchema = new Schema({
         question: String,
+        latest_accepted_answer: String,
+        latest_accepted_user_id: String,
         comments: [{
             comment: String,
             user_id: String,
