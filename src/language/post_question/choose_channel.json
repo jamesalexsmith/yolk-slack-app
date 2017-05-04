@@ -10,7 +10,7 @@
             "actions": [
                 {
                     "name": "channels_list",
-                    "text": "_Which channel would you like to post the question to?_",
+                    "text": "Choose a channel...",
                     "type": "select",
                     "data_source": "channels"
                 }

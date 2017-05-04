@@ -30,6 +30,10 @@ module.exports = (app) => {
 
 	slapp.route('ask_confirmation', (msg, state) => {
 		let answer = msg.body.actions[0].value
+		// If state was manually passed along
+		if (state.answer) {
+			answer = state.answer
+		}
 
 		if (answer === 'cancel') {
 			var reply = lang_cancelled_question
@@ -49,23 +53,27 @@ module.exports = (app) => {
 			var channelMention = '<!channel|channel>'
 			var reply = lang_post_question
 
-			msg.respond({
-				delete_original: true
-			})
-
 			reply.text = ''
 			reply.attachments[0].title = 'Hey ' + channelMention + ', ' + userMention + ' has a question: \n ' + state.question
 			reply.attachments[0].ts = Math.floor(new Date() / 1000)
-
 
 			// Hack to thread the new reply
 			var token = msg.meta.bot_token || msg.meta.app_token
 			var slack = slackAPI(token)
 			var channel_id = msg.meta.channel_id
+			if (state.channel_selected) {
+				// If channel was passed with a selection use it instead
+				channel_id = msg.body.actions[0].selected_options[0].value
+			}
 
 			// If channel is in an IM use a dropdown to ask which channel to post it into
 			if (channel_id[0] === 'D') {
-				msg.route('choose_channel', state)
+				reply = lang_choose_channel
+				state.answer = 'post'
+				state.channel_selected = true
+				msg
+					.respond(reply)
+					.route('ask_confirmation', state)
 				return
 			}
 
@@ -75,7 +83,16 @@ module.exports = (app) => {
 			// Post question in channel
 			slack.chat.postMessage(channel_id, reply.text, reply, function (err, response) {
 				if (err) {
-					console.log('Error:', err)
+					if (err.stack.slice(0, 21) === 'Error: not_in_channel') {
+						console.log(msg)
+						let updatedResponse = msg.body.original_message
+						updatedResponse.text = ':sweat_smile: _I can\'t post your question to that channel since I\'m not a part of that channel!_ \n_Can you invite me to it and try again?_ :pray:'
+						msg
+							.respond(updatedResponse)
+							.route('ask_confirmation', state)
+						return
+					}
+					console.log('Error posting question to channel', err)
 					return
 				}
 				let question_ts = response.message.ts
@@ -88,7 +105,7 @@ module.exports = (app) => {
 				}
 				slack.chat.postMessage(channel_id, 'Lets get this conversation started!', data, function (err, res) {
 					if (err) {
-						console.log('Error:', err)
+						console.log('Error posting hint to thread the question', err)
 						return
 					}
 				});
@@ -139,21 +156,15 @@ module.exports = (app) => {
 					})
 				})
 
+				msg.respond({
+					delete_original: true
+				})
+
 				// Post the contents into the database
 				let contents = createQuestionModelContents(msg, state.question, question_ts)
 				db.saveQuestion(contents)
 			})
 		}
-	})
-
-	slapp.route('choose_channel', (msg, state) => {
-		let reply = lang_choose_channel
-		state.answer = 'post'
-		state.channel = 'TEST'
-		console.log(reply)
-		msg
-			.respond(reply)
-			.route('ask_confirmation', state)
 	})
 
 	function createQuestionModelContents(msg, question, timestamp) {
