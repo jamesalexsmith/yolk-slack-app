@@ -10,6 +10,7 @@ module.exports = (mongoose) => {
             comment: String,
             user_id: String,
             accepted: Boolean,
+            accepted_at: Date,
             timestamp: String,
             date: Date,
             reactions: {
@@ -26,6 +27,7 @@ module.exports = (mongoose) => {
         team_id: String,
         team_name: String,
         answered: Boolean,
+        answered_at: Date,
         timestamp: String,
         date: Date
     })

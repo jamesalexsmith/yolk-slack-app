@@ -148,26 +148,24 @@ module.exports = (app) => {
 		})
 	}
 
-	function dbUpdateComment(msg, channel_id, thread_ts, answer) {  
+	function dbUpdateComment(msg, channel_id, thread_ts, answer) {
 		// Mark the relevant comment as accepted
 		let commentQuery = {
-		    'team_id': msg.meta.team_id,
-		    'channel_id': channel_id,
-		    'timestamp': thread_ts,
+			'team_id': msg.meta.team_id,
+			'channel_id': channel_id,
+			'timestamp': thread_ts,
 			'comments.comment': answer
 		}
 		// TODO Searching for comment by text so always find the latest one
-		let updateCommentQuery = {$set: {'comments.$.accepted': true}}
-		db.updateQuestion(commentQuery, updateCommentQuery)
-
-		// Mark the parent question as answered
-		let questionQuery = {
-		    'team_id': msg.meta.team_id,
-		    'channel_id': channel_id,
-		    'timestamp': thread_ts,
+		let updateCommentQuery = {
+			$set: {
+				'comments.$.accepted': true,
+				'comments.$.accepted_at': Date(),
+				'answered': true,
+				'answered_at': Date()
+			}
 		}
-		let updateQuestionQuery = {$set: {'answered': true}}
-		db.updateQuestion(questionQuery, updateQuestionQuery)
+		db.updateQuestion(commentQuery, updateCommentQuery)
 	}
 
 	return {}
