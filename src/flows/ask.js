@@ -84,7 +84,6 @@ module.exports = (app) => {
 			slack.chat.postMessage(channel_id, reply.text, reply, function (err, response) {
 				if (err) {
 					if (err.stack.slice(0, 21) === 'Error: not_in_channel') {
-						console.log(msg)
 						let updatedResponse = msg.body.original_message
 						updatedResponse.text = ':sweat_smile: _I can\'t post your question to that channel since I\'m not a part of that channel!_ \n_Can you invite me to it and try again?_ :pray:'
 						msg

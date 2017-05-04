@@ -19,7 +19,7 @@ module.exports = (app) => {
 			return {}
 		}
 
-		db.Question.find({$text: {$search: text}})
+		db.Question.find({$text: {$search: text}, answered: true})
 			.limit(9)
 			.exec(function (err, docs) {
 				if (err) {
@@ -28,12 +28,13 @@ module.exports = (app) => {
 				}
 				if (docs.length == 0) {
 					// No results in Yolk
-					confirmPostYolkQuestion(msg, text)
+					startQuestionPostingFlow(msg, text)
 
 				} else {
 					// Found already matched Q&A pairs
+					let paginations = paginateMatches(docs)
+					console.log(paginations)
 				}
-				console.log(docs)
 			});
 
 		// Found matches?
@@ -49,26 +50,24 @@ module.exports = (app) => {
 		// return
 	})
 
-	function confirmPostYolkQuestion(msg, question) {
+	function startQuestionPostingFlow(msg, question) {
 		let reply = post_question_confirmation
 		let state = {question: question}
 		reply.text = '_I couldn\'t find an answer to your question, would you like to post it in Slack?_'
 		reply.attachments[0].title = question
 		reply.attachments[0].callback_id = 'ask_callback'
-		
+
 		msg
 			.say(reply)
 			.route('ask_confirmation', state)
 	}
 
-	
-
-	function postQuestion(msg) {
-
-	}
-
-	function paginateMatches(qaMatches, paginationLength) {
-		// return pagination
+	function paginateMatches(qaMatches, paginationLength=3) {
+		let paginations = []
+		for (var i = paginationLength; i - paginationLength < qaMatches.length; i += paginationLength) {
+			paginations.push(qaMatches.slice(i - paginationLength, i))
+		}
+		return paginations
 	}
 
 
