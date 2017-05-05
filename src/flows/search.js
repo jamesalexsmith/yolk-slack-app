@@ -104,6 +104,10 @@ module.exports = (app) => {
 			// In a sniffing flow the answer was found so update the original yolk message to say it was found
 			else if (state.ephemeral) {
 				let response = 'Hey <@' + state.sniffer_asker_user_id + '>, <@' + msg.meta.user_id + '> thinks this may be the answer!\n>>>\n'
+				if (state.sniffer_asker_user_id == msg.meta.user_id) {
+					// The question poster sniffed and found an answer on their own
+					response = '<@' + state.sniffer_asker_user_id + '> found the answer!\n>>>\n'
+				}
 				response += meta_data.answer
 				msg.respond(state.sniffer_response_url, response)
 			}
@@ -125,7 +129,6 @@ module.exports = (app) => {
 				text: 'Sorry I couldn\'t be of help to you. :disappointed:',
 				replace_original: true,
 			})
-
 
 			if (state.ephemeral) { // If ephemeral get rid of the sniff prompt
 				msg.respond(state.sniffer_response_url, {
