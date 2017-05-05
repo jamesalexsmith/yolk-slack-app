@@ -27,7 +27,9 @@ module.exports = (app) => {
 
 		let searchQuery = {
 			team_id: msg.meta.team_id,
-			$text: {$search: text},
+			$text: {
+				$search: text
+			},
 			answered: true
 		}
 
@@ -47,7 +49,7 @@ module.exports = (app) => {
 					// Found already matched Q&A pairs
 					let paginations = paginateMatches(docs)
 					let reply = formatResults(msg, paginations, 0)
-					
+
 					let state = {
 						'reply': reply,
 						'paginations': paginations,
@@ -62,7 +64,7 @@ module.exports = (app) => {
 	})
 
 	slapp.route('search_flow', (msg, state) => {
-		let answer = msg.body.actions[0].value
+		let answer = msg.body.actions[0].name
 
 		if (answer === 'next') {
 			state.index += 1
@@ -78,7 +80,12 @@ module.exports = (app) => {
 				.route('search_flow', state)
 		} else if (answer === 'validate') {
 			msg.respond('I\'m glad to have helped, I\'ll send along the thanks! :smile:')
-			// TODO SEND THANKS
+			let meta_data = JSON.parse(msg.body.actions[0].value)
+			let qa_pair_index = meta_data.qa_pair_index
+			let qa_pair = msg.body.original_message.attachments[qa_pair_index]
+			let asker_user_id = meta_data.asker_user_id
+			let answerer_user_id = meta_data.answerer_user_id
+			sendThanks(msg, qa_pair, asker_user_id, answerer_user_id)
 		} else if (answer === 'dismiss') {
 			msg.respond('Sorry I couldn\'t be of help to you. :disappointed:')
 		}
@@ -86,7 +93,9 @@ module.exports = (app) => {
 
 	function startQuestionPostingFlow(msg, question) {
 		let reply = JSON.parse(JSON.stringify(post_question_confirmation))
-		let state = {question: question}
+		let state = {
+			question: question
+		}
 		reply.text = '_I couldn\'t find an answer to your question, would you like to post it in Slack?_'
 		reply.attachments[0].title = question
 		reply.attachments[0].callback_id = 'ask_callback'
@@ -96,7 +105,7 @@ module.exports = (app) => {
 			.route('ask_confirmation', state)
 	}
 
-	function paginateMatches(qaMatches, paginationLength=3) {
+	function paginateMatches(qaMatches, paginationLength = 3) {
 		let paginations = []
 		for (var i = paginationLength; i - paginationLength < qaMatches.length; i += paginationLength) {
 			paginations.push(qaMatches.slice(i - paginationLength, i))
@@ -114,6 +123,12 @@ module.exports = (app) => {
 			formatted_qa_pair.title = 'Q: ' + qa_pair.question + '\nA: ' + qa_pair.latest_accepted_answer
 			formatted_qa_pair.title_link = generateLinkToFirstComment(msg, qa_pair)
 			formatted_qa_pair.footer = generateFooter(qa_pair.author_user_id, qa_pair.latest_accepted_user_id, qa_pair.answered_at)
+			// Pass along meta data for 
+			formatted_qa_pair.actions[0].value = JSON.stringify({
+				'qa_pair_index': i,
+				'asker_user_id': qa_pair.author_user_id,
+				'answerer_user_id': qa_pair.latest_accepted_user_id
+			})
 			formatted_pagination.push(JSON.parse(JSON.stringify(formatted_qa_pair)))
 		}
 		return JSON.parse(JSON.stringify(formatted_pagination))
@@ -154,17 +169,12 @@ module.exports = (app) => {
 			// show next button and previous button
 			pagination.actions.push(JSON.parse(JSON.stringify(lang_prev_button)))
 			pagination.actions.push(JSON.parse(JSON.stringify(lang_next_button)))
-			console.log('HERE1')
-		}
-		else if (paginations.length - 1 > index) {
+		} else if (paginations.length - 1 > index) {
 			// show next button
 			pagination.actions.push(JSON.parse(JSON.stringify(lang_next_button)))
-			console.log('HERE2')
-		}
-		else if (index > 0) {
+		} else if (index > 0) {
 			// show previous button
 			pagination.actions.push(JSON.parse(JSON.stringify(lang_prev_button)))
-			console.log('HERE3')
 		}
 
 		pagination.actions.push(JSON.parse(JSON.stringify(lang_dismiss_button)))
@@ -172,8 +182,41 @@ module.exports = (app) => {
 		return JSON.parse(JSON.stringify(pagination))
 	}
 
-	function sendThanks(msg, qaMatch) {
+	function sendThanks(msg, qa_pair, asker_user_id, answerer_user_id) {
+		if (msg.meta.user_id != asker_user_id) {
+			let asker_thanks = 'Hey <@' + asker_user_id + '>, <@' + msg.meta.user_id + '> found your question useful! Thanks for helping out. \n>>>' + qa_pair.title
+			sendDM(msg, asker_user_id, {text: asker_thanks})
+		}
 
+		if (msg.meta.user_id != answerer_user_id) {
+			let answerer_thanks = 'Hey <@' + answerer_user_id + '>, <@' + msg.meta.user_id + '> found your answer useful! Thanks for helping out. \n>>>' + qa_pair.title
+			sendDM(msg, answerer_user_id, {text: answerer_thanks})
+		}
+	}
+
+	function sendDM(msg, user_id, reply) {
+		// Open IM with user
+		let imOptions = {
+			token: msg.meta.bot_token,
+			user: user_id
+		}
+		slapp.client.im.open(imOptions, (err, imData) => {
+			if (err) {
+				console.log('Error opening im with user for thanks in search', err)
+				return
+			}
+			let msgOptions = {
+				token: msg.meta.bot_token,
+				channel: imData.channel.id,
+				text: reply.text
+			}
+
+			slapp.client.chat.postMessage(msgOptions, (err, postData) => {
+				if (err) {
+					console.log('Error sending thanks in search', err)
+				}
+			})
+		})
 	}
 
 	return {}
