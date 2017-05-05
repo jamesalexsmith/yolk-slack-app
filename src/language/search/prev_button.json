@@ -1,7 +1,7 @@
 {
-    "name": "next_page",
+    "name": "previous",
     "style": "primary",
-    "text": "Next",
+    "text": "Previous",
     "type": "button",
-    "value": ""
+    "value": "previous"
 }
