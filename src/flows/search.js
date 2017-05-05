@@ -7,6 +7,7 @@ module.exports = (app) => {
 	let lang_next_button = require('../language/search/next_button.json')
 	let lang_prev_button = require('../language/search/prev_button.json')
 	let lang_dismiss_button = require('../language/search/dismiss_button.json')
+	let lang_question_button = require('../language/search/question_button.json')
 	let lang_qa_pair = require('../language/search/qa_pair.json')
 	let lang_pagination = require('../language/search/pagination.json')
 	let lang_results = require('../language/search/results.json')
@@ -43,7 +44,7 @@ module.exports = (app) => {
 				}
 				if (docs.length == 0) {
 					// No results in Yolk
-					startQuestionPostingFlow(msg, text)
+					startQuestionPostingFlow('_I couldn\'t find an answer to your question, would you like to post it in Slack?_', msg, text)
 
 				} else {
 					// Found already matched Q&A pairs
@@ -51,6 +52,7 @@ module.exports = (app) => {
 					let reply = formatResults(msg, paginations, 0)
 
 					let state = {
+						'question': text,
 						'reply': reply,
 						'paginations': paginations,
 						'index': 0,
@@ -86,17 +88,23 @@ module.exports = (app) => {
 			let asker_user_id = meta_data.asker_user_id
 			let answerer_user_id = meta_data.answerer_user_id
 			sendThanks(msg, qa_pair, asker_user_id, answerer_user_id)
+		} else if (answer === 'question') {
+			msg.respond(msg.body.response_url, {
+				text: '',
+				delete_original: true
+			})
+			startQuestionPostingFlow('_Would you like me to ask this question for you?_', msg, state.question)
 		} else if (answer === 'dismiss') {
 			msg.respond('Sorry I couldn\'t be of help to you. :disappointed:')
 		}
 	})
 
-	function startQuestionPostingFlow(msg, question) {
+	function startQuestionPostingFlow(text, msg, question) {
 		let reply = JSON.parse(JSON.stringify(post_question_confirmation))
 		let state = {
 			question: question
 		}
-		reply.text = '_I couldn\'t find an answer to your question, would you like to post it in Slack?_'
+		reply.text = text
 		reply.attachments[0].title = question
 		reply.attachments[0].callback_id = 'ask_callback'
 
@@ -178,6 +186,7 @@ module.exports = (app) => {
 		}
 
 		pagination.actions.push(JSON.parse(JSON.stringify(lang_dismiss_button)))
+		pagination.actions.push(JSON.parse(JSON.stringify(lang_question_button)))
 
 		return JSON.parse(JSON.stringify(pagination))
 	}

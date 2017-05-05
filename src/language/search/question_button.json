@@ -1,0 +1,6 @@
+{
+    "name": "question",
+    "text": "Post question",
+    "type": "button",
+    "value": "question"
+}
