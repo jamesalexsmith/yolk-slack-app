@@ -1,5 +1,6 @@
 {
     "text": "_@user is asking_",
+    "response_type": "ephemeral",
     "attachments": [
         {
             "mrkdwn_in": ["text", "pretext", "fields"],

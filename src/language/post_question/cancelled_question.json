@@ -1,5 +1,6 @@
 {
     "text": "_Here's your question so far:_",
+    "response_type": "ephemeral",
     "replace_original": true,
     "attachments": [
         {

@@ -104,11 +104,13 @@ module.exports = (app) => {
 		} 
 		
 		else if (answer === 'question') {
-			msg.respond(msg.body.response_url, {
+			let response_url = msg.body.response_url
+
+			msg.respond(response_url, {
 				text: '',
-				delete_original: true
+				delete_original: true,
 			})
-			startQuestionPostingFlow('_Would you like me to ask this question for you?_', msg, state.question)
+			startQuestionPostingFlow('_Would you like me to ask this question for you?_', msg, state.question, state.ephemeral, state.sniffer_response_url)
 		} 
 		
 		else if (answer === 'dismiss') {
@@ -119,7 +121,7 @@ module.exports = (app) => {
 		}
 	})
 
-	function startQuestionPostingFlow(text, msg, question) {
+	function startQuestionPostingFlow(text, msg, question, ephemeral=false, response_url=null) {
 		let reply = JSON.parse(JSON.stringify(post_question_confirmation))
 		let state = {
 			question: question
@@ -128,9 +130,14 @@ module.exports = (app) => {
 		reply.attachments[0].title = question
 		reply.attachments[0].callback_id = 'ask_callback'
 
-		msg
-			.say(reply)
-			.route('ask_confirmation', state)
+		if (ephemeral) {
+			reply.replace_original = false
+			msg.respond(response_url, reply)
+		} else {
+			msg.say(reply)
+		}
+
+		msg.route('ask_confirmation', state)
 	}
 
 	function paginateMatches(qaMatches, paginationLength = 3) {
