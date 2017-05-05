@@ -6,6 +6,7 @@ module.exports = (app) => {
 	let post_question_confirmation = require('../language/post_question/ask_question_confirmation.json')
 	let lang_next_button = require('../language/search/next_button.json')
 	let lang_prev_button = require('../language/search/prev_button.json')
+	let lang_dismiss_button = require('../language/search/dismiss_button.json')
 	let lang_qa_pair = require('../language/search/qa_pair.json')
 	let lang_pagination = require('../language/search/pagination.json')
 	let lang_results = require('../language/search/results.json')
@@ -57,8 +58,30 @@ module.exports = (app) => {
 						.say(reply)
 						.route('search_flow', state)
 				}
-			});
+			})
+	})
 
+	slapp.route('search_flow', (msg, state) => {
+		let answer = msg.body.actions[0].value
+
+		if (answer === 'next') {
+			state.index += 1
+			let reply = formatResults(msg, state.paginations, state.index)
+			msg
+				.respond(reply)
+				.route('search_flow', state)
+		} else if (answer === 'previous') {
+			state.index -= 1
+			let reply = formatResults(msg, state.paginations, state.index)
+			msg
+				.respond(reply)
+				.route('search_flow', state)
+		} else if (answer === 'validate') {
+			msg.respond('I\'m glad to have helped, I\'ll send along the thanks! :smile:')
+			// TODO SEND THANKS
+		} else if (answer === 'dismiss') {
+			msg.respond('Sorry I couldn\'t be of help to you. :disappointed:')
+		}
 	})
 
 	function startQuestionPostingFlow(msg, question) {
@@ -143,6 +166,8 @@ module.exports = (app) => {
 			pagination.actions.push(JSON.parse(JSON.stringify(lang_prev_button)))
 			console.log('HERE3')
 		}
+
+		pagination.actions.push(JSON.parse(JSON.stringify(lang_dismiss_button)))
 
 		return JSON.parse(JSON.stringify(pagination))
 	}

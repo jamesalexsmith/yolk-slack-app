@@ -1,0 +1,7 @@
+{
+    "name": "dismiss",
+    "style": "danger",
+    "text": "Dismiss",
+    "type": "button",
+    "value": "dismiss"
+}
