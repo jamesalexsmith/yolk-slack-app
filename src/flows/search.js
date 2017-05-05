@@ -7,6 +7,7 @@ module.exports = (app) => {
 	let lang_next_button = require('../language/search/next_button.json')
 	let lang_prev_button = require('../language/search/prev_button.json')
 	let lang_qa_pair = require('../language/search/qa_pair.json')
+	let lang_pagination = require('../language/search/pagination.json')
 	let lang_results = require('../language/search/results.json')
 
 	slapp.command('/yolk', '(search)', (msg, text) => {
@@ -38,10 +39,8 @@ module.exports = (app) => {
 					// Found already matched Q&A pairs
 					let paginations = paginateMatches(docs)
 					let reply = formatResults(msg, paginations[0])
-					// reply.attachments.push(generatePaginationNavigation(paginations, 0))
+					reply.attachments.push(generatePaginationNavigation(paginations, 0))
 					msg.say(reply)
-					console.log(reply)
-					// console.log(paginations)
 				}
 			});
 
@@ -98,17 +97,23 @@ module.exports = (app) => {
 		return 'Answered by <@' + user_id + '> on <!date^' + Math.floor(new Date(timestamp) / 1000) + '^{date_long} at {time}|' + Date(timestamp).toLocaleString() + '>'
 	}
 
+	function generatePaginationNavigation(paginations, index) {
+		let pagination = lang_pagination
+		if (paginations.length - 1 > index && index > 0) {
+			// show next button and previous button
+			pagination.actions.push(lang_prev_button)
+			pagination.actions.push(lang_next_button)
+		}
+		else if (paginations.length - 1 > index) {
+			// show next button
+			pagination.actions.push(lang_next_button)
+		}
+		else if (index > 0) {
+			// show previous button
+			pagination.actions.push(lang_prev_button)
+		}
 
-	function nextPageExists(paginatedQAMatches, pageIndex) {
-
-	}
-
-	function prevPageExists(paginatedQAMatches, pageIndex) {
-
-	}
-
-	function sendValidationData(msg, qaMatch) {
-		// send thanks
+		return pagination
 	}
 
 	function sendThanks(msg, qaMatch) {
