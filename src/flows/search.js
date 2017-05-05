@@ -29,7 +29,7 @@ module.exports = (app) => {
 		startSearchFlow(msg, text)
 	})
 
-	function startSearchFlow(msg, question, ephemeral=false, response_url=null) {
+	function startSearchFlow(msg, question, ephemeral=false, sniffer_asker_user_id=null, response_url=null) {
 		db.getQAPairs(msg.meta.team_id, question)
 			// TODO ORDER BY RELEVANCE
 			.limit(9)
@@ -53,6 +53,7 @@ module.exports = (app) => {
 						'paginations': paginations,
 						'index': 0,
 						'ephemeral': ephemeral,
+						'sniffer_asker_user_id': sniffer_asker_user_id,
 						'sniffer_response_url': response_url
 					}
 
@@ -99,6 +100,12 @@ module.exports = (app) => {
 			let qa_pair = false
 			if (!state.ephemeral) {
 				qa_pair = msg.body.original_message.attachments[qa_pair_index]
+			}
+			// In a sniffing flow the answer was found so update the original yolk message to say it was found
+			else if (state.ephemeral) {
+				let response = 'Hey <@' + state.sniffer_asker_user_id + '>, <@' + msg.meta.user_id + '> thinks this may be the answer!\n>>>\n'
+				response += meta_data.answer
+				msg.respond(state.sniffer_response_url, response)
 			}
 			sendThanks(msg, qa_pair, asker_user_id, answerer_user_id)
 		} 
@@ -158,9 +165,12 @@ module.exports = (app) => {
 			formatted_qa_pair.title = 'Q: ' + qa_pair.question + '\nA: ' + qa_pair.latest_accepted_answer
 			formatted_qa_pair.title_link = generateLinkToFirstComment(msg, qa_pair)
 			formatted_qa_pair.footer = generateFooter(qa_pair.author_user_id, qa_pair.latest_accepted_user_id, qa_pair.answered_at)
-			// Pass along meta data for 
+			
+			// Pass along meta data for route handling
 			formatted_qa_pair.actions[0].value = JSON.stringify({
 				'qa_pair_index': i,
+				'qa_pair_ts': qa_pair.timestamp,
+				'answer': qa_pair.latest_accepted_answer,
 				'asker_user_id': qa_pair.author_user_id,
 				'answerer_user_id': qa_pair.latest_accepted_user_id
 			})
