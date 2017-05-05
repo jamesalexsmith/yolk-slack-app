@@ -1,0 +1,20 @@
+{
+    "text": "",
+    "attachments": [{
+        "callback_id": "sniffer_callback",
+        "color": "#FDCE2E",
+        "title": "",
+        "actions": [{
+            "name": "show",
+            "style": "primary",
+            "text": "Show Me!",
+            "type": "button",
+            "value": "ORIGINAL QUESTION TEXT"
+        },{
+            "name": "dismiss",
+            "text": "Not really...",
+            "type": "button",
+            "value": "ORIGINAL QUESTION TEXT"
+        }]
+    }]
+}

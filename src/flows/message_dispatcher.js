@@ -49,7 +49,7 @@ module.exports = (app) => {
         } else if (isQuestion(msg.body.event.text)) {
             // TODO REMOVE FEATURE FLAG WHEN LAUNCHING OR LAUNCHED TEAM
             if (msg.meta.team_name.includes('Yolk') || msg.meta.team_name.includes('testing')) {
-                imUser(msg, text)
+                sniffer.startSniffingFlow(msg, text)
             }
         }
     })
