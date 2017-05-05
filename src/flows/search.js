@@ -125,6 +125,14 @@ module.exports = (app) => {
 				text: 'Sorry I couldn\'t be of help to you. :disappointed:',
 				replace_original: true,
 			})
+
+
+			if (state.ephemeral) { // If ephemeral get rid of the sniff prompt
+				msg.respond(state.sniffer_response_url, {
+					text: '',
+					delete_original: true,
+				})
+			}
 		}
 	})
 
