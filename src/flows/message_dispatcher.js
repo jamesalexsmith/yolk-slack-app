@@ -73,6 +73,7 @@ module.exports = (app) => {
         if (isInYolkThread(msg)) {
             notify_asker(msg)
         } else if (isQuestion(msg.body.event.text)) {
+            // TODO REMOVE FEATURE FLAG WHEN LAUNCHING OR LAUNCHED TEAM
             if (msg.meta.team_name.includes('Yolk') || msg.meta.team_name.includes('testing')) {
                 imUser(msg, text)
             }
