@@ -24,7 +24,13 @@ module.exports = (app) => {
 			return {}
 		}
 
-		db.Question.find({$text: {$search: text}, answered: true})
+		let searchQuery = {
+			team_id: msg.meta.team_id,
+			$text: {$search: text},
+			answered: true
+		}
+
+		db.Question.find(searchQuery)
 			// TODO ORDER BY RELEVANCE
 			.limit(9)
 			.exec(function (err, docs) {
@@ -56,7 +62,7 @@ module.exports = (app) => {
 	})
 
 	function startQuestionPostingFlow(msg, question) {
-		let reply = post_question_confirmation
+		let reply = JSON.parse(JSON.stringify(post_question_confirmation))
 		let state = {question: question}
 		reply.text = '_I couldn\'t find an answer to your question, would you like to post it in Slack?_'
 		reply.attachments[0].title = question
@@ -72,35 +78,35 @@ module.exports = (app) => {
 		for (var i = paginationLength; i - paginationLength < qaMatches.length; i += paginationLength) {
 			paginations.push(qaMatches.slice(i - paginationLength, i))
 		}
-		return paginations
+		return JSON.parse(JSON.stringify(paginations))
 	}
 
-	function formatPagination(msg, pagination) {
+	function formatPagination(msg, page) {
 		// Render all the qa pairs in the pagination
 		let formatted_pagination = []
-		let formatted_qa_pair = lang_qa_pair
-		for (var i = 0; i < pagination.length; i++) {
-			let qa_pair = pagination[i]
-			formatted_qa_pair = lang_qa_pair
+		let formatted_qa_pair = JSON.parse(JSON.stringify(lang_qa_pair))
+		for (var i = 0; i < page.length; i++) {
+			let qa_pair = page[i]
+			formatted_qa_pair = JSON.parse(JSON.stringify(lang_qa_pair))
 			formatted_qa_pair.title = 'Q: ' + qa_pair.question + '\nA: ' + qa_pair.latest_accepted_answer
 			formatted_qa_pair.title_link = generateLinkToFirstComment(msg, qa_pair)
-			formatted_qa_pair.footer = generateFooter(qa_pair.latest_accepted_user_id, qa_pair.answered_at)
+			formatted_qa_pair.footer = generateFooter(qa_pair.author_user_id, qa_pair.latest_accepted_user_id, qa_pair.answered_at)
 			formatted_pagination.push(JSON.parse(JSON.stringify(formatted_qa_pair)))
 		}
-		return formatted_pagination
+		return JSON.parse(JSON.stringify(formatted_pagination))
 	}
 
 	function formatResults(msg, paginations, pagination_index) {
 		// For each paginatation format their qa pairs
 		let formattedPaginations = []
-		paginations.forEach(function(pagination) {
-			formattedPaginations.push(formatPagination(msg, pagination))
-		}, this);
+		for (var i = 0; i < paginations.length; i++) {
+			formattedPaginations.push(formatPagination(msg, paginations[i]))
+		}
 
-		let results = lang_results
+		let results = JSON.parse(JSON.stringify(lang_results))
 		results.attachments = formattedPaginations[pagination_index]
 		results.attachments.push(generatePaginationNavigation(paginations, pagination_index))
-		return results
+		return JSON.parse(JSON.stringify(results))
 	}
 
 	function generateLinkToFirstComment(msg, qa_pair) {
@@ -115,27 +121,30 @@ module.exports = (app) => {
 		return url
 	}
 
-	function generateFooter(user_id, timestamp) {
-		return 'Answered by <@' + user_id + '> on <!date^' + Math.floor(new Date(timestamp) / 1000) + '^{date_long} at {time}|' + Date(timestamp).toLocaleString() + '>'
+	function generateFooter(asker_user_id, user_id, timestamp) {
+		return 'Asked by <@' + asker_user_id + '> and answered by <@' + user_id + '> on <!date^' + Math.floor(new Date(timestamp) / 1000) + '^{date_long} at {time}|' + Date(timestamp).toLocaleString() + '>'
 	}
 
 	function generatePaginationNavigation(paginations, index) {
-		let pagination = lang_pagination
+		let pagination = JSON.parse(JSON.stringify(lang_pagination))
 		if (paginations.length - 1 > index && index > 0) {
 			// show next button and previous button
-			pagination.actions.push(lang_prev_button)
-			pagination.actions.push(lang_next_button)
+			pagination.actions.push(JSON.parse(JSON.stringify(lang_prev_button)))
+			pagination.actions.push(JSON.parse(JSON.stringify(lang_next_button)))
+			console.log('HERE1')
 		}
 		else if (paginations.length - 1 > index) {
 			// show next button
-			pagination.actions.push(lang_next_button)
+			pagination.actions.push(JSON.parse(JSON.stringify(lang_next_button)))
+			console.log('HERE2')
 		}
 		else if (index > 0) {
 			// show previous button
-			pagination.actions.push(lang_prev_button)
+			pagination.actions.push(JSON.parse(JSON.stringify(lang_prev_button)))
+			console.log('HERE3')
 		}
 
-		return pagination
+		return JSON.parse(JSON.stringify(pagination))
 	}
 
 	function sendThanks(msg, qaMatch) {
