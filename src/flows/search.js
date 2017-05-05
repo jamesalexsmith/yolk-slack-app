@@ -29,8 +29,8 @@ module.exports = (app) => {
 		startSearchFlow(msg, text)
 	})
 
-	function startSearchFlow(msg, text) {
-		db.getQAPairs(msg.meta.team_id, text)
+	function startSearchFlow(msg, question, ephemeral=false, response_url=null) {
+		db.getQAPairs(msg.meta.team_id, question)
 			// TODO ORDER BY RELEVANCE
 			.limit(9)
 			.exec(function (err, docs) {
@@ -40,7 +40,7 @@ module.exports = (app) => {
 				}
 				if (docs.length == 0) {
 					// No results in Yolk
-					startQuestionPostingFlow('_I couldn\'t find an answer to your question, would you like to post it in Slack?_', msg, text)
+					startQuestionPostingFlow('_I couldn\'t find an answer to your question, would you like to post it in Slack?_', msg, question)
 
 				} else {
 					// Found already matched Q&A pairs
@@ -48,15 +48,23 @@ module.exports = (app) => {
 					let reply = formatResults(msg, paginations, 0)
 
 					let state = {
-						'question': text,
+						'question': question,
 						'reply': reply,
 						'paginations': paginations,
 						'index': 0,
+						'ephemeral': ephemeral,
+						'sniffer_response_url': response_url
 					}
 
-					msg
-						.say(reply)
-						.route('search_flow', state)
+					if (ephemeral) {
+						// Need to respond with a new message
+						reply.replace_original = false
+						msg.respond(response_url, reply)
+					} else {
+						msg.say(reply)
+					}
+
+					msg.route('search_flow', state)
 				}
 			})
 	}
@@ -70,28 +78,44 @@ module.exports = (app) => {
 			msg
 				.respond(reply)
 				.route('search_flow', state)
-		} else if (answer === 'previous') {
+		} 
+		
+		else if (answer === 'previous') {
 			state.index -= 1
 			let reply = formatResults(msg, state.paginations, state.index)
 			msg
 				.respond(reply)
 				.route('search_flow', state)
-		} else if (answer === 'validate') {
+		} 
+		
+		else if (answer === 'validate') {
 			msg.respond('I\'m glad to have helped, I\'ll send along the thanks! :smile:')
 			let meta_data = JSON.parse(msg.body.actions[0].value)
 			let qa_pair_index = meta_data.qa_pair_index
-			let qa_pair = msg.body.original_message.attachments[qa_pair_index]
 			let asker_user_id = meta_data.asker_user_id
 			let answerer_user_id = meta_data.answerer_user_id
+
+			// If the search flow started ephemerally from a sniff original_message isn't passed by slack
+			let qa_pair = false
+			if (!state.ephemeral) {
+				qa_pair = msg.body.original_message.attachments[qa_pair_index]
+			}
 			sendThanks(msg, qa_pair, asker_user_id, answerer_user_id)
-		} else if (answer === 'question') {
+		} 
+		
+		else if (answer === 'question') {
 			msg.respond(msg.body.response_url, {
 				text: '',
 				delete_original: true
 			})
 			startQuestionPostingFlow('_Would you like me to ask this question for you?_', msg, state.question)
-		} else if (answer === 'dismiss') {
-			msg.respond('Sorry I couldn\'t be of help to you. :disappointed:')
+		} 
+		
+		else if (answer === 'dismiss') {
+			msg.respond(msg.body.response_url, {
+				text: 'Sorry I couldn\'t be of help to you. :disappointed:',
+				replace_original: true,
+			})
 		}
 	})
 
@@ -188,13 +212,31 @@ module.exports = (app) => {
 	}
 
 	function sendThanks(msg, qa_pair, asker_user_id, answerer_user_id) {
+		// qa_pair could be null if it is ephemeral
+
+		//
+		if (msg.meta.user_id != asker_user_id && msg.meta.user_id != answerer_user_id && asker_user_id == answerer_user_id) {
+			let thanks_msg = 'Hey <@' + asker_user_id + '>, <@' + msg.meta.user_id + '> found your question and answer useful! Thanks for helping out.'
+			if (qa_pair) {
+				thanks_msg += '\n>>>' + qa_pair.title
+			}
+			sendDM(msg, asker_user_id, {text: thanks_msg})
+			return
+		}
+
 		if (msg.meta.user_id != asker_user_id) {
-			let asker_thanks = 'Hey <@' + asker_user_id + '>, <@' + msg.meta.user_id + '> found your question useful! Thanks for helping out. \n>>>' + qa_pair.title
+			let asker_thanks = 'Hey <@' + asker_user_id + '>, <@' + msg.meta.user_id + '> found your question useful! Thanks for helping out.'
+			if (qa_pair) {
+				asker_thanks += '\n>>>' + qa_pair.title
+			}
 			sendDM(msg, asker_user_id, {text: asker_thanks})
 		}
 
 		if (msg.meta.user_id != answerer_user_id) {
-			let answerer_thanks = 'Hey <@' + answerer_user_id + '>, <@' + msg.meta.user_id + '> found your answer useful! Thanks for helping out. \n>>>' + qa_pair.title
+			let answerer_thanks = 'Hey <@' + answerer_user_id + '>, <@' + msg.meta.user_id + '> found your answer useful! Thanks for helping out.'
+			if (qa_pair) {
+				answerer_thanks += '\n>>>' + qa_pair.title
+			}
 			sendDM(msg, answerer_user_id, {text: answerer_thanks})
 		}
 	}
@@ -224,5 +266,8 @@ module.exports = (app) => {
 		})
 	}
 
-	return {}
+	let methods = {}
+	methods.startSearchFlow = startSearchFlow
+
+	return methods
 }

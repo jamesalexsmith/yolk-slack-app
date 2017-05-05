@@ -1,5 +1,8 @@
 {
     "text": "",
+    "response_type": "ephemeral",
+    "replace_original": false,
+    "delete_original": false,
     "attachments": [{
         "callback_id": "sniffer_callback",
         "color": "#FDCE2E",

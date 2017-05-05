@@ -4,6 +4,7 @@ module.exports = (app) => {
     let db = app.db
     let slapp = app.slapp
     let lang_search_me_prompt = require('../language/sniffing/search_me_prompt.json')
+    let searcher = require('./search')(app)
 
     // Methods
     var methods = {}
@@ -44,7 +45,15 @@ module.exports = (app) => {
     })
 
     slapp.action('sniffer_callback', 'show', (msg, text) => {
-        msg.respond('Hi am I ephemeral?')
+        // Update original sniffing message letting channel know someone is searching for an answer
+        let original_message = msg.body.original_message
+        original_message.attachments[0].actions = []
+        original_message.attachments[0].footer = '<@' + msg.meta.user_id + '> is looking for the answer!'
+        msg.respond(msg.body.response_url, original_message)
+
+        // Start search flow ephemerally for the user who click show
+        let question = msg.body.actions[0].value
+        searcher.startSearchFlow(msg, question, true, msg.body.response_url)
     })
 
     return methods
