@@ -26,15 +26,11 @@ module.exports = (app) => {
 			return {}
 		}
 
-		let searchQuery = {
-			team_id: msg.meta.team_id,
-			$text: {
-				$search: text
-			},
-			answered: true
-		}
+		startSearchFlow(msg, text)
+	})
 
-		db.Question.find(searchQuery)
+	function startSearchFlow(msg, text) {
+		db.getQAPairs(msg.meta.team_id, text)
 			// TODO ORDER BY RELEVANCE
 			.limit(9)
 			.exec(function (err, docs) {
@@ -63,7 +59,7 @@ module.exports = (app) => {
 						.route('search_flow', state)
 				}
 			})
-	})
+	}
 
 	slapp.route('search_flow', (msg, state) => {
 		let answer = msg.body.actions[0].name

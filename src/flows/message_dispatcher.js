@@ -4,6 +4,7 @@ module.exports = (app) => {
     let slapp = app.slapp
     var rp = require('request-promise')
     var notify_asker = require('./notify_asker')(app)
+    let sniffer = require('./sniffer')(app)
 
     function isInYolkThread(msg) {
         if (msg.body.event.thread_ts !== undefined) {
@@ -40,33 +41,6 @@ module.exports = (app) => {
             text.startsWith('has ') ||
             text.startsWith('did ') ||
             text.endsWith('?')
-    }
-
-    function imUser(msg, text) {
-        let imOptions = {
-            token: msg.meta.bot_token,
-            user: msg.meta.user_id
-        }
-        slapp.client.im.open(imOptions, (err, imData) => {
-            if (err) {
-                console.log('Error opening DM with user when sniffing')
-                return
-            }
-
-            let reply = 'Noticed you asked a question:\n' + text + '\n Try to check with me before asking the channel!\n If I don\'t have the answer I can post it for you!\n <Interactive message for auto search and post question todo>'
-            let msgOptions = {
-                token: msg.meta.bot_token,
-                channel: imData.channel.id,
-                text: reply
-            }
-
-            slapp.client.chat.postMessage(msgOptions, (err, postData) => {
-                if (err) {
-                    console.log('Error sniffing with user', err)
-                    return
-                }
-            })
-        })
     }
 
     slapp.message('(.*)', (msg, text) => {

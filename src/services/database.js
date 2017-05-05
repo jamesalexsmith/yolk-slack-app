@@ -88,5 +88,16 @@ module.exports = (mongoose) => {
         })
     }
 
+    methods.getQAPairs = function(team_id, text) {
+        let searchQuery = {
+			team_id: team_id,
+			$text: {
+				$search: text
+			},
+			answered: true
+		}
+        return Question.find(searchQuery)
+    } 
+
     return methods
 }
