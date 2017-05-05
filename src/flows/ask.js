@@ -107,50 +107,53 @@ module.exports = (app) => {
 						console.log('Error posting hint to thread the question', err)
 						return
 					}
-				});
+					let first_comment_ts = res.message.ts
+					let first_comment_thread_ts = res.message.thread_ts
 
-				// Post question in DM
-				let imOptions = {
-					token: msg.meta.bot_token,
-					user: msg.meta.user_id
-				}
-				slapp.client.im.open(imOptions, (err, imData) => {
-					if (err) {
-						console.log('Error opening DM with user when asking question')
-						return
-					}
-					let new_question = lang_notify_new_question
-					new_question.text = '_Got it! Here\'s your question:_'
-					new_question.attachments[0].title = state.question
-					new_question.attachments[0].footer = '<!date^' + Math.floor(new Date() / 1000) + '^Asked {date_long} at {time}|Asked ' + new Date().toLocaleString() + '>'
-					
-					let msgOptions = {
+					// Post question in DM
+					let imOptions = {
 						token: msg.meta.bot_token,
-						channel: imData.channel.id,
-						text: new_question.text,
-						attachments: new_question.attachments
+						user: msg.meta.user_id
 					}
-
-					slapp.client.chat.postMessage(msgOptions, (err, postData) => {
+					slapp.client.im.open(imOptions, (err, imData) => {
 						if (err) {
-							console.log('Error notifying asker of new question', err)
+							console.log('Error opening DM with user when asking question')
 							return
 						}
-
-
-						// Thread the mirrored question in the dm giving them hyper link to original question
-						let questionUrl = 'https://' + msg.meta.team_domain + '.slack.com/archives/' + msg.meta.channel_id + '/p' + question_ts.replace('.','')
-						let dmThreadedMsgOptions = {
+						let new_question = lang_notify_new_question
+						new_question.text = '_Got it! Here\'s your question:_'
+						new_question.attachments[0].title = state.question
+						new_question.attachments[0].footer = '<!date^' + Math.floor(new Date() / 1000) + '^Asked {date_long} at {time}|Asked ' + new Date().toLocaleString() + '>'
+						
+						let msgOptions = {
 							token: msg.meta.bot_token,
 							channel: imData.channel.id,
-							text: 'If you would like to post your own answer click <' + questionUrl + '|here>!',
-							thread_ts: postData.ts,
+							text: new_question.text,
+							attachments: new_question.attachments
 						}
-						slapp.client.chat.postMessage(dmThreadedMsgOptions, (err, postData) => {
+
+						slapp.client.chat.postMessage(msgOptions, (err, postData) => {
 							if (err) {
-								console.log('Error linking original question in mirrored dm', err)
+								console.log('Error notifying asker of new question', err)
 								return
 							}
+
+
+							// Thread the mirrored question in the dm giving them hyper link to original question
+							let questionUrl = 'https://' + msg.meta.team_domain + '.slack.com/archives/' + channel_id + '/p' + question_ts.replace('.','')
+							questionUrl = generateLinkToFirstComment(msg, channel_id, first_comment_ts, first_comment_thread_ts)
+							let dmThreadedMsgOptions = {
+								token: msg.meta.bot_token,
+								channel: imData.channel.id,
+								text: 'If you would like to post your own answer click <' + questionUrl + '|here>!',
+								thread_ts: postData.ts,
+							}
+							slapp.client.chat.postMessage(dmThreadedMsgOptions, (err, postData) => {
+								if (err) {
+									console.log('Error linking original question in mirrored dm', err)
+									return
+								}
+							})
 						})
 					})
 				})
@@ -160,25 +163,36 @@ module.exports = (app) => {
 				})
 
 				// Post the contents into the database
-				let contents = createQuestionModelContents(msg, state.question, question_ts)
+				let contents = createQuestionModelContents(msg, channel_id, state.question, question_ts)
 				db.saveQuestion(contents)
 			})
 		}
 	})
 
-	function createQuestionModelContents(msg, question, timestamp) {
+	function createQuestionModelContents(msg, channel_id, question, timestamp) {
 		return {
 			question: question,
 			comments: [],
 			author_user_id: msg.meta.user_id,
 			reactions: [],
-			channel_id: msg.meta.channel_id,
+			channel_id: channel_id,
 			team_id: msg.meta.team_id,
 			team_name: msg.meta.team_name,
 			answered: false,
 			timestamp: timestamp,
 			date: new Date()
 		}
+	}
+
+	function generateLinkToFirstComment(msg, channel_id, comment_ts, comment_thread_ts) {
+		// format: https://yolkhq.slack.com/archives/C55GAHKK5/p1493910706621195?thread_ts=1493910701.618016&cid=C55GAHKK5
+		let url = 'https://'
+		let team_domain = msg.meta.team_domain
+		let ts = comment_ts.replace('.', '')
+		let thread_ts = comment_thread_ts.replace('.', '')
+
+		url = url + team_domain + '.slack.com/archives/' + channel_id + '/p' + ts + '?thread_ts=' + thread_ts + '&cid=' + channel_id
+		return url
 	}
 
 	return {}
