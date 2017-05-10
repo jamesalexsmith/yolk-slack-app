@@ -68,6 +68,7 @@ module.exports = (mongoose) => {
         team_id: String,
         onboarded: Boolean,
         onboarded_at: Date,
+        started_onboarded_at: Date,
         google_token: String
     })
 
