@@ -81,6 +81,14 @@ module.exports = (mongoose) => {
         })
     }
 
+    methods.updateTeam = function(query, update) {
+        Team.findOneAndUpdate(query, update, function (err, doc) {
+            if (err) {
+                console.log('Error updating team in mongodb', err)
+            }
+        })
+    }
+
     methods.updateQuestion = function(query, update) {
         Question.findOneAndUpdate(query, update, function (err, doc) {
             if (err) {
