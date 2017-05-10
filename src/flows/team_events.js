@@ -5,17 +5,15 @@ module.exports = (app) => {
 	let slapp = app.slapp
 
 	slapp.event('bb.team_added', function (msg) {
-		let teamContents = {
-			team_name: msg.meta.team_name,
-			team_id: msg.meta.team_id,
-			paid: false,
-			paid_at: null,
-			launched: false,
-			launched_at: null,
-			added_at: new Date(),
-		}
+		msg.say('Hi, thanks for installing Yolk!\nIf you\'re ready to launch type `/yolk launch`')
+		addTeam(msg)
+		addUsers(msg)
+	})
 
-		db.saveTeam(teamContents)
+	slapp.command('/yolk', 'reinstall', (msg) => {
+		addTeam(msg)
+		addUsers(msg)
+		msg.respond('Reinstalled Yolk!')
 	})
 
 	slapp.command('/yolk', 'launch', (msg) => {
@@ -69,6 +67,49 @@ module.exports = (app) => {
 		})
 		
 	}
+
+	function addTeam(msg) {
+		let teamContents = {
+			team_name: msg.meta.team_name,
+			team_id: msg.meta.team_id,
+			paid: false,
+			paid_at: null,
+			launched: false,
+			launched_at: null,
+			added_at: new Date(),
+		}
+		// Will upsert if it doesn't exist
+		db.updateTeam({team_id: msg.meta.team_id}, teamContents)
+	}
+
+	function addUsers(msg) {
+		let usersOptions = {token: msg.meta.bot_token}
+		slapp.client.users.list(usersOptions, (err, usersData) => {
+			if (err) {
+				console.log('Error listing all users in team added event', err)
+				return
+			}
+
+			for (var i = 0; i < usersData.members.length; i++) {
+				let user = usersData.members[i]
+				if (! (user.is_bot || user.deleted)) {
+					let userContents = {
+						user_id: user.id,
+						user_name: user.real_name,
+						team_name: msg.meta.team_name,
+						team_id: msg.meta.team_id,
+						onboarded: false,
+						onboarded_at: null,
+						google_token: null
+					}
+					// Will upsert if it doesn't exist
+					db.updateUser({team_id: msg.meta.team_id, user_id: user.id}, userContents)
+				}
+			}
+		})
+	}
+
+
 
 	return {}
 }

@@ -94,7 +94,7 @@ module.exports = (mongoose) => {
     }
 
     methods.updateTeam = function(query, update) {
-        Team.findOneAndUpdate(query, update, function (err, doc) {
+        Team.findOneAndUpdate(query, update, {upsert:true}, function (err, doc) {
             if (err) {
                 console.log('Error updating team in mongodb', err)
             }
@@ -111,7 +111,7 @@ module.exports = (mongoose) => {
     }
 
     methods.updateUser = function(query, update) {
-        User.findOneAndUpdate(query, update, function (err, doc) {
+        User.findOneAndUpdate(query, update, {upsert:true}, function (err, doc) {
             if (err) {
                 console.log('Error updating user in mongodb', err)
             }
