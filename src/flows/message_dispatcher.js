@@ -20,7 +20,7 @@ module.exports = (app) => {
 
     function isQuestion(text) {
         text = text.toLowerCase()
-        return text.startsWith('who ') ||
+        return (text.startsWith('who ') ||
             text.startsWith('what ') ||
             text.startsWith('when ') ||
             text.startsWith('where ') ||
@@ -40,7 +40,8 @@ module.exports = (app) => {
             text.startsWith('should ') ||
             text.startsWith('has ') ||
             text.startsWith('did ') ||
-            text.endsWith('?')
+            text.endsWith('?')) &&
+            text.split(' ').length - 1 >= 5
     }
 
     slapp.message('(.*)', (msg, text) => {
