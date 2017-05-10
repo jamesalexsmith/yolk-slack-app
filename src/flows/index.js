@@ -9,6 +9,7 @@ module.exports = (app) => {
 		import: require('./import')(app),
 		export: require('./export')(app),
 		answer: require('./answer')(app),
+		team_events: require('./team_events')(app),
 		message_dispatcher: require('./message_dispatcher')(app)
 	}
 }

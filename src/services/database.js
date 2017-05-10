@@ -51,14 +51,35 @@ module.exports = (mongoose) => {
 
     validationSchema.index({'$**': 'text'});
 
+    var teamsSchema = new Schema({
+        team_name: String,
+        team_id: String,
+        paid: Boolean,
+        paid_at: Date,
+        launched: Boolean,
+        launched_at: Date,
+        added_at: Date,
+    })
+
     // Models
     var Question = mongoose.model('Question', questionSchema)
     var Validation = mongoose.model('Validation', validationSchema)
+    var Team = mongoose.model('Team', teamsSchema)
 
     // Methods
     var methods = {}
     methods.Question = Question
     methods.Validation = Validation
+    methods.Team = Team
+
+    methods.saveTeam = function(contents) {
+        let team = new Team(contents)
+        team.save(function (err, team) {
+            if (err) {
+                console.log('Error saving team', err)
+            } 
+        })
+    }
 
     methods.updateQuestion = function(query, update) {
         Question.findOneAndUpdate(query, update, function (err, doc) {
@@ -81,7 +102,7 @@ module.exports = (mongoose) => {
     methods.saveValidation = function(contents) {
         let validation = new Validation(contents);
 
-        validation.save(function (err, question) {
+        validation.save(function (err, validation) {
             if (err) {
                 console.log('Error saving validation', err)
             } 
