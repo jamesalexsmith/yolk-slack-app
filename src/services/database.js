@@ -158,5 +158,12 @@ module.exports = (mongoose) => {
         return Question.find(searchQuery)
     } 
 
+    methods.getLaunchedTeamIDs = function() {
+        let searchQuery = {
+            launched: true
+        }
+        return Team.find(searchQuery)
+    }
+
     return methods
 }

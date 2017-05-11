@@ -44,7 +44,9 @@ mongoose.connect(mongodbUri, options)
 var conn = mongoose.connection
 conn.on('error', console.error.bind(console, 'connection error:'))
 
+console.log('Connecting to MongoDB...')
 conn.once('open', function () {
+	console.log('Done connecting to MongoDB')
 	// Create models and schemas
 	const db = require('./src/services/database')(mongoose)
 	var app = {
@@ -56,19 +58,34 @@ conn.once('open', function () {
 		db
 	}
 
-	// Conversation flows
-	require('./src/flows')(app)
-
-	server.get('/', function (req, res) {
-		res.send('Hi, you\'ve reached the Yolk app servers.')
-	})
-
-	// start http server
-	server.listen(port, (err) => {
+	db.getLaunchedTeamIDs().exec(function (err, launchedTeams) {
+		console.log('Fetching teams that have launched...')
 		if (err) {
-			return console.error(err)
-		}
+			console.log('Error fetching teams that have launched')
+		}	
 
-		console.log(`Listening on port ${port}`)
+
+		// STATEFUL VARIABLES FOR OPTIMIZATION
+		app.team_ids_launched = []
+		for (var i = 0; i < launchedTeams.length; i++) {
+			app.team_ids_launched.push(launchedTeams[i].team_id)
+		}
+		console.log('Done fetching teams that have launched:', app.team_ids_launched)
+	
+		// Conversation flows
+		require('./src/flows')(app)
+
+		server.get('/', function (req, res) {
+			res.send('Hi, you\'ve reached the Yolk app servers.')
+		})
+
+		// start http server
+		server.listen(port, (err) => {
+			if (err) {
+				return console.error(err)
+			}
+
+			console.log(`Listening on port ${port}`)
+		})
 	})
 });

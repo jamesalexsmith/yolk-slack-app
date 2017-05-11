@@ -45,11 +45,10 @@ module.exports = (app) => {
     }
 
     slapp.message('(.*)', (msg, text) => {
-        if (isInYolkThread(msg)) {
-            notify_asker(msg)
-        } else if (isQuestion(msg.body.event.text)) {
-            // TODO REMOVE FEATURE FLAG WHEN LAUNCHING OR LAUNCHED TEAM
-            if (msg.meta.team_name.includes('Yolk') || msg.meta.team_name.includes('testing')) {
+        if (app.team_ids_launched.includes(msg.meta.team_id)) {
+            if (isInYolkThread(msg)) {
+                notify_asker(msg)
+            } else if (isQuestion(msg.body.event.text)) {
                 sniffer.startSniffingFlow(msg, text)
             }
         }
