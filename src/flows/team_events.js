@@ -23,6 +23,7 @@ module.exports = (app) => {
 		let updateQuery = {$set: {'launched': true, 'launched_at': new Date()}}
 		db.updateTeam(teamQuery, updateQuery)
 		msg.say('Launching Yolk to the rest of your Slack!')
+		app.team_ids_launched.push(msg.meta.team_id)
 
 		startOnboardingUsers(msg)
 	})
