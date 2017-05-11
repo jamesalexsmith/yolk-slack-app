@@ -3,6 +3,7 @@
 module.exports = (app) => {
 	let db = app.db
 	let slapp = app.slapp
+	let onboarding_message_builder = require('../services/onboarding_message_builder')(app)
 
 	slapp.event('bb.team_added', function (msg) {
 		msg.say('Hi, thanks for installing Yolk!\nIf you\'re ready to launch type `/yolk launch`')
@@ -49,11 +50,15 @@ module.exports = (app) => {
 							console.log('Error opening im with user for onboarding', err)
 						}
 
+						let google_auth_link = 'www.google.com' // TODO
+						let onboarding_message = onboarding_message_builder.build(0, user.id, msg.meta.team_name, google_auth_link)
+
 						// Display onboarding message
 						let msgOptions = {
 							token: msg.meta.bot_token,
 							channel: imData.channel.id,
-							text: "THIS IS A LAUNCH TEST"
+							text: onboarding_message.text,
+							attachments: onboarding_message.attachments
 						}
 
 						slapp.client.chat.postMessage(msgOptions, (err, postData) => {
@@ -65,8 +70,13 @@ module.exports = (app) => {
 				}
 			}
 		})
-		
 	}
+
+	slapp.action('onboarding_callback', 'next', (msg, text) => {
+		let meta_data = JSON.parse(msg.body.actions[0].value)
+		let onboarding_message = onboarding_message_builder.build(parseInt(meta_data.index) + 1, meta_data.user_id, meta_data.company_name, meta_data.google_auth_link)
+		msg.respond(msg.body.response_url, onboarding_message)
+	})
 
 	function addTeam(msg) {
 		let teamContents = {

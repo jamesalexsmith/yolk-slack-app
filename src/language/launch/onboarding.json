@@ -1,0 +1,25 @@
+{
+    "text": "",
+    "attachments": [{
+        "callback_id": "onboarding_callback",
+        "color": "#FDCE2E",
+        "title": "",
+        "title_link": "",
+        "text": "",
+        "footer": "",
+        "fields": [{
+            "value": "",
+            "short": "true"
+        }, {
+            "value": "",
+            "short": "true"
+        }],
+        "actions": [{
+            "name": "next",
+            "style": "primary",
+            "text": "Next",
+            "type": "button",
+            "value": "next"
+        }]
+    }]
+}
