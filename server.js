@@ -21,7 +21,7 @@ var slapp = Slapp({
 
 // attach Slapp to express server
 var server = slapp.attachToExpress(express())
-var SlackWebClient = require('@slack/client').WebClient;
+var SlackWebClient = require('@slack/client').WebClient
 
 // Conect to mongodb
 var options = {
@@ -62,7 +62,7 @@ conn.once('open', function () {
 		console.log('Fetching teams that have launched...')
 		if (err) {
 			console.log('Error fetching teams that have launched')
-		}	
+		}
 
 
 		// STATEFUL VARIABLES FOR OPTIMIZATION
@@ -71,9 +71,10 @@ conn.once('open', function () {
 			app.team_ids_launched.push(launchedTeams[i].team_id)
 		}
 		console.log('Done fetching teams that have launched:', app.team_ids_launched)
-	
+
 		// Conversation flows
 		require('./src/flows')(app)
+		require('./src/authentications')(app)
 
 		server.get('/', function (req, res) {
 			res.send('Hi, you\'ve reached the Yolk app servers.')
