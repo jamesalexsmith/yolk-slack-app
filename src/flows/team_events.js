@@ -111,7 +111,7 @@ module.exports = (app) => {
 						team_id: msg.meta.team_id,
 						onboarded: false,
 						onboarded_at: null,
-						google_token: null
+						google_client: null
 					}
 					// Will upsert if it doesn't exist
 					db.updateUser({team_id: msg.meta.team_id, user_id: user.id}, userContents)

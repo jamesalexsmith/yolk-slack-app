@@ -69,7 +69,7 @@ module.exports = (mongoose) => {
         onboarded: Boolean,
         onboarded_at: Date,
         started_onboarded_at: Date,
-        google_token: String
+        google_client: String
     })
 
     // Models
@@ -163,6 +163,14 @@ module.exports = (mongoose) => {
             launched: true
         }
         return Team.find(searchQuery)
+    }
+
+    methods.addGoogleCredentialsToUser = function(msg, credentials) {
+        User.findOneAndUpdate({team_id: msg.meta.team_id, user_id: msg.meta.user_id}, {google_client: JSON.stringify(credentials)}, function (err, doc) {
+            if (err) {
+                console.log('Error adding google auth to user in mongodb', err)
+            }
+        })
     }
 
     return methods

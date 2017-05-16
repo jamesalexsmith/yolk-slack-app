@@ -19,16 +19,6 @@ module.exports = (app) => {
 
     console.log('Google Authentication URL = \n', authUrl)
 
-    function canAuthorize(code, success_callback, failure_callback) {
-        oauth2Client.getToken(code, function (err, token) {
-            if (err) {
-                failure_callback()
-                return
-            }
-            success_callback()
-        })
-    }
-
     /**
      * Create an OAuth2 client with the given credentials, and then execute the
      * given callback function.
@@ -36,15 +26,15 @@ module.exports = (app) => {
      * @param {Object} credentials The authorization client credentials.
      * @param {function} callback The callback to call with the authorized client.
      */
-    function authorize(code, callback) {
+    function authorize(code, success_callback, failure_callback) {
         oauth2Client.getToken(code, function (err, token) {
             if (err) {
+                failure_callback()
                 console.log('Error while trying to retrieve access token', err)
-                return 'error'
+                return
             }
             oauth2Client.credentials = token
-            console.log('TOKENNNNN', token)
-            callback(oauth2Client)
+            success_callback(oauth2Client)
         })
     }
 
@@ -80,7 +70,6 @@ module.exports = (app) => {
     let exports = {}
     exports.authUrl = authUrl
     exports.authorize = authorize
-    exports.canAuthorize = canAuthorize
 
     return exports
 }
