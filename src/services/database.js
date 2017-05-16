@@ -69,7 +69,7 @@ module.exports = (mongoose) => {
         onboarded: Boolean,
         onboarded_at: Date,
         started_onboarded_at: Date,
-        google_client: String
+        google_credentials: String
     })
 
     // Models
@@ -127,6 +127,14 @@ module.exports = (mongoose) => {
         })
     }
 
+    methods.getUser = function(team_id, user_id) {
+        let searchQuery = {
+			team_id: team_id,
+			user_id: user_id
+		}
+        return User.find(searchQuery)
+    }
+
     methods.saveQuestion = function(contents) {
         let question = new Question(contents);
 
@@ -166,7 +174,7 @@ module.exports = (mongoose) => {
     }
 
     methods.addGoogleCredentialsToUser = function(msg, credentials) {
-        User.findOneAndUpdate({team_id: msg.meta.team_id, user_id: msg.meta.user_id}, {google_client: JSON.stringify(credentials)}, function (err, doc) {
+        User.findOneAndUpdate({team_id: msg.meta.team_id, user_id: msg.meta.user_id}, {google_credentials: JSON.stringify(credentials)}, function (err, doc) {
             if (err) {
                 console.log('Error adding google auth to user in mongodb', err)
             }

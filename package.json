@@ -18,6 +18,7 @@
   "homepage": "https://github.com/jamesalexsmith/yolk-slack-app",
   "dependencies": {
     "@slack/client": "^3.8.1",
+    "async": "^2.4.0",
     "express": "^4.14.0",
     "google-auth-library": "^0.10.0",
     "googleapis": "^19.0.0",
