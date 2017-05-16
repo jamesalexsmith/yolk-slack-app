@@ -49,6 +49,7 @@ conn.once('open', function () {
 	console.log('Done connecting to MongoDB')
 	// Create models and schemas
 	const db = require('./src/services/database')(mongoose)
+	
 	var app = {
 		slapp,
 		server,
@@ -57,13 +58,17 @@ conn.once('open', function () {
 		mongoose,
 		db
 	}
+	let authentications = require('./src/authentications')(app)
+	let flows = require('./src/flows')(app)
+
+	app.flows = flows
+	app.authentications = authentications
 
 	db.getLaunchedTeamIDs().exec(function (err, launchedTeams) {
 		console.log('Fetching teams that have launched...')
 		if (err) {
 			console.log('Error fetching teams that have launched')
 		}
-
 
 		// STATEFUL VARIABLES FOR OPTIMIZATION
 		app.team_ids_launched = []
@@ -72,9 +77,6 @@ conn.once('open', function () {
 		}
 		console.log('Done fetching teams that have launched:', app.team_ids_launched)
 
-		// Conversation flows
-		require('./src/flows')(app)
-		require('./src/authentications')(app)
 
 		server.get('/', function (req, res) {
 			res.send('Hi, you\'ve reached the Yolk app servers.')

@@ -10,6 +10,9 @@ module.exports = (app) => {
 		export: require('./export')(app),
 		answer: require('./answer')(app),
 		team_events: require('./team_events')(app),
+		authenticate: require('./authenticate')(app),
 		message_dispatcher: require('./message_dispatcher')(app)
 	}
+
+	return app.flows
 }

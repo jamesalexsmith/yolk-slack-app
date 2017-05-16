@@ -11,6 +11,7 @@ module.exports = (app) => {
 	let lang_qa_pair = require('../language/search/qa_pair.json')
 	let lang_pagination = require('../language/search/pagination.json')
 	let lang_results = require('../language/search/results.json')
+	let authenticate = require('./authenticate')(app)
 
 	slapp.command('/yolk', '(search)', (msg, text) => {
 		console.log('search', msg)
@@ -21,6 +22,10 @@ module.exports = (app) => {
 		if (text === 'help') {
 			return {}
 		} else if (text.startsWith('Noticed you asked me to post a ')) {
+			return {}
+		} else if (authenticate.getGoogleCode(text)) {
+			 // Google auth token
+			authenticate.googleAuthFlow(msg, authenticate.getGoogleCode(text))
 			return {}
 		} else if (msg.body.event.thread_ts) { // In a thread
 			return {}
