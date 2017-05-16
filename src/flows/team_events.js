@@ -51,7 +51,7 @@ module.exports = (app) => {
 							console.log('Error opening im with user for onboarding', err)
 						}
 
-						let google_auth_link = 'www.google.com' // TODO
+						let google_auth_link = app.authentications.google.authUrl
 						let onboarding_message = onboarding_message_builder.build(0, user.id, msg.meta.team_name, google_auth_link)
 
 						// Display onboarding message
