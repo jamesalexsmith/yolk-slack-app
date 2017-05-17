@@ -47,13 +47,13 @@ module.exports = (app) => {
 			if (user.google_credentials) {
 				let credentials = JSON.parse(user.google_credentials)
 
-				google_drive.searchFiles(credentials, 'founders agreement', function (err, googleSearchResults) {
+				google_drive.searchFiles(credentials, question, function (err, googleSearchResults) {
 					if (err) {
 						console.log('Error fetching google files in drive when searching', err)
 						return err
 					}
 
-					google_drive.readFiles(credentials, googleSearchResults, function (err, googleFiles) {
+					google_drive.readFiles(credentials, question, googleSearchResults, function (err, googleFiles) {
 						db.getQAPairs(msg.meta.team_id, question).limit(9).exec(function (err, docs) { // TODO ORDER BY RELEVANCE
 
 							// Label the type of item so when building the message the style is reserved
@@ -249,11 +249,11 @@ module.exports = (app) => {
 			}
 
 			else if (page[i].type == 'google') {
-				console.log(page[i])
 				let googleFile = page[i]
 				formatted_qa_pair = JSON.parse(JSON.stringify(lang_google_drive_qa_pair))
 				formatted_qa_pair.title = googleFile.meta.name
 				formatted_qa_pair.title_link = googleFile.meta.webViewLink
+				formatted_qa_pair.text = '...' + googleFile.snippet + '...'
 				formatted_qa_pair.footer = generateGoogleFooter(googleFile.meta.modifiedTime)
 
 				// Pass along meta data for route handling
