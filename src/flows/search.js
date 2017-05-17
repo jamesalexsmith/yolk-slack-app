@@ -153,6 +153,22 @@ module.exports = (app) => {
 				})
 				startQuestionPostingFlow('_Would you like me to ask this question for you?_', msg, state.question, state.ephemeral, state.sniffer_response_url)
 				return
+
+			} else if (answer === 'create_qa_pair') {
+				let response_url = msg.body.response_url
+
+				msg.respond(msg.body.response_url, {
+					text: '_Glad I could be helpful! I\'m going to validate this knowledge so your peers can find it easier in the future._',
+					replace_original: true
+				})
+
+				if (state.ephemeral) { // If ephemeral get rid of the sniff prompt
+					msg.respond(state.sniffer_response_url, {
+						text: '_Glad I could be helpful! I\'m going to validate this knowledge so your peers can find it easier in the future._',
+						delete_original: true,
+					})
+				}
+				return
 			} else if (answer === 'dismiss') {
 				msg.respond(msg.body.response_url, {
 					text: 'Sorry I couldn\'t be of help to you. :disappointed:',
