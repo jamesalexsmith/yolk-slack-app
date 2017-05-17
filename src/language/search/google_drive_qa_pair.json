@@ -1,12 +1,10 @@
 {
-    "attachments": [
-        {
     "callback_id": "validation",
     "color": "#4885ed",
-    "title": "Yolk Founders Agreement",
-    "title_link": "https://www.google.com",
-    "text": "...The founders agrement states that sdjkfsdfkj kjsdfsdjkdjksf kjsdfjksjkfsdfkj sdf kjsdfkjsdfkjsfj...",
-    "footer": "From your Google Drive",
+    "title": "",
+    "title_link": "",
+    "text": "",
+    "footer": "",
     "fields": [{
         "value": "",
         "short": "true"
@@ -21,6 +19,4 @@
         "type": "button",
         "value": "create_qa_pair"
     }]
-}
-    ]
 }

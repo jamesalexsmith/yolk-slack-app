@@ -56,6 +56,7 @@ module.exports = (app) => {
         drive.files.export({
             fileId: file.id,
             mimeType: 'text/plain',
+            fields: 'id, webViewLink, name, modifiedTime',
             auth: client
         }, function (err, text) {
             if (err) {

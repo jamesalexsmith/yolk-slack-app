@@ -13,6 +13,7 @@ module.exports = (app) => {
 	let lang_dismiss_button = require('../language/search/dismiss_button.json')
 	let lang_question_button = require('../language/search/question_button.json')
 	let lang_qa_pair = require('../language/search/qa_pair.json')
+	let lang_google_drive_qa_pair = require('../language/search/google_drive_qa_pair.json')
 	let lang_pagination = require('../language/search/pagination.json')
 	let lang_results = require('../language/search/results.json')
 
@@ -59,9 +60,6 @@ module.exports = (app) => {
 							docs = labelType(docs, 'yolk')
 							googleFiles = labelType(googleFiles, 'google')
 
-							console.log(docs)
-							console.log(googleFiles)
-
 							let searchResults = docs.concat(googleFiles)
 
 							if (err) {
@@ -72,7 +70,7 @@ module.exports = (app) => {
 							if (docs.length == 0 && googleFiles.length == 0) { // No validated results in Yolk 
 								startQuestionPostingFlow('_I couldn\'t find an answer to your question. Would you like to post it in Slack?_', msg, question)
 							} else { // Found already matched Q&A pairs
-								let paginations = paginateMatches(docs)
+								let paginations = paginateMatches(searchResults)
 								let reply = formatResults(msg, paginations, 0)
 
 								if (docs.length == 0) { // No validated results but we found results in google
@@ -251,7 +249,20 @@ module.exports = (app) => {
 			}
 
 			else if (page[i].type == 'google') {
+				console.log(page[i])
 				let googleFile = page[i]
+				formatted_qa_pair = JSON.parse(JSON.stringify(lang_google_drive_qa_pair))
+				formatted_qa_pair.title = googleFile.meta.name
+				formatted_qa_pair.title_link = googleFile.meta.webViewLink
+				formatted_qa_pair.footer = generateGoogleFooter(googleFile.meta.modifiedTime)
+
+				// Pass along meta data for route handling
+				formatted_qa_pair.actions[0].value = JSON.stringify({
+					'id': googleFile.meta.id,
+					'title': googleFile.meta.name.slice(0, googleFile.meta.name.length - 4),
+					'webViewLink': googleFile.meta.webViewLink
+				})
+				formatted_pagination.push(JSON.parse(JSON.stringify(formatted_qa_pair)))
 			}
 		}
 		return JSON.parse(JSON.stringify(formatted_pagination))
@@ -284,6 +295,10 @@ module.exports = (app) => {
 
 	function generateFooter(asker_user_id, user_id, timestamp) {
 		return 'Asked by <@' + asker_user_id + '> and answered by <@' + user_id + '> on <!date^' + Math.floor(new Date(timestamp) / 1000) + '^{date_long} at {time}|' + Date(timestamp).toLocaleString() + '>'
+	}
+
+	function generateGoogleFooter(datetime) {
+		return 'Found in Google Drive | Last modified <!date^' + Math.floor(new Date(datetime) / 1000) + '^{date_long} at {time}|' + Date(datetime).toLocaleString() + '>'
 	}
 
 	function generatePaginationNavigation(paginations, index) {
