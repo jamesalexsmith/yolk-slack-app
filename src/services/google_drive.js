@@ -120,7 +120,6 @@ module.exports = (app) => {
                 console.log('The Drive list API returned an error: ' + err)
                 return err
             }
-            console.log("fullText contains '" + query + "' and mimeType = 'application/vnd.google-apps.document'")
 
             let files = response.files
             callback(err, files)

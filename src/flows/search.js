@@ -128,9 +128,13 @@ module.exports = (app) => {
 				let answerer_user_id = meta_data.answerer_user_id
 
 				// If the search flow started ephemerally from a sniff original_message isn't passed by slack
+
 				let qa_pair = false
 				if (!state.ephemeral) {
 					qa_pair = msg.body.original_message.attachments[qa_pair_index]
+					// Show selected answer
+					qa_pair.actions = []
+					msg.say({text: '_This is the answer!_', 'attachments': [qa_pair]})
 				}
 				// In a sniffing flow the answer was found so update the original yolk message to say it was found
 				else if (state.ephemeral) {
@@ -142,6 +146,7 @@ module.exports = (app) => {
 					response += meta_data.answer
 					msg.respond(state.sniffer_response_url, response)
 				}
+
 				sendThanks(msg, qa_pair, asker_user_id, answerer_user_id)
 				return
 			} else if (answer === 'question') {
@@ -155,19 +160,36 @@ module.exports = (app) => {
 				return
 
 			} else if (answer === 'create_qa_pair') {
-				let response_url = msg.body.response_url
+				msg.respond('_Glad I could be helpful! I\'m going to validate this knowledge so your peers can find it easier in the future._')
+				let meta_data = JSON.parse(msg.body.actions[0].value)
+				let qa_pair_index = meta_data.qa_pair_index
+				let asker_user_id = meta_data.asker_user_id
+				let answerer_user_id = meta_data.answerer_user_id
 
-				msg.respond(msg.body.response_url, {
-					text: '_Glad I could be helpful! I\'m going to validate this knowledge so your peers can find it easier in the future._',
-					replace_original: true
-				})
-
-				if (state.ephemeral) { // If ephemeral get rid of the sniff prompt
-					msg.respond(state.sniffer_response_url, {
-						text: '_Glad I could be helpful! I\'m going to validate this knowledge so your peers can find it easier in the future._',
-						delete_original: true,
-					})
+				let qa_pair = false
+				if (!state.ephemeral) {
+					qa_pair = msg.body.original_message.attachments[qa_pair_index]
+					// Show selected answer
+					qa_pair.actions = []
+					msg.say({text: '_This is the answer!_', 'attachments': [qa_pair]})
 				}
+				// In a sniffing flow the answer was found so update the original yolk message to say it was found
+				else if (state.ephemeral) {
+					let text = 'Hey <@' + state.sniffer_asker_user_id + '>, <@' + msg.meta.user_id + '> thinks this may be the answer!\n>>>\n'
+					if (state.sniffer_asker_user_id == msg.meta.user_id) {
+						// The question poster sniffed and found an answer on their own
+						text = '<@' + state.sniffer_asker_user_id + '> found the answer!\n>>>\n'
+					}
+					// Recreate the attachment and post it
+					let qa_pair_attachment = JSON.parse(JSON.stringify(lang_google_drive_qa_pair))
+					qa_pair_attachment.title = meta_data.title
+					qa_pair_attachment.text = meta_data.snippet
+					qa_pair_attachment.footer = meta_data.footer
+					let response = {text: text, 'attachments': [qa_pair_attachment]}
+
+					msg.respond(state.sniffer_response_url, response)
+				}
+
 				return
 			} else if (answer === 'dismiss') {
 				msg.respond(msg.body.response_url, {
@@ -274,9 +296,12 @@ module.exports = (app) => {
 
 				// Pass along meta data for route handling
 				formatted_qa_pair.actions[0].value = JSON.stringify({
+					'qa_pair_index': i,
 					'id': googleFile.meta.id,
-					'title': googleFile.meta.name.slice(0, googleFile.meta.name.length - 4),
-					'webViewLink': googleFile.meta.webViewLink
+					'title': googleFile.meta.name,
+					'snippet': '...' + googleFile.snippet + '...',
+					'webViewLink': googleFile.meta.webViewLink,
+					'footer': generateGoogleFooter(googleFile.meta.modifiedTime)
 				})
 				formatted_pagination.push(JSON.parse(JSON.stringify(formatted_qa_pair)))
 			}
