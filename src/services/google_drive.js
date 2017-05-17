@@ -22,7 +22,7 @@ module.exports = (app) => {
                         return err
                     }
 
-                    readFiles(msg, credentials, files, function (err, fileContents) {
+                    readFiles(credentials, files, function (err, fileContents) {
                         console.log(fileContents)
                     })
                 })
@@ -34,7 +34,7 @@ module.exports = (app) => {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    function readFiles(msg, credentials, files, callback) {
+    function readFiles(credentials, files, callback) {
         // Read all file asynchronously in parallel and wait for them to be done
         let asyncCalls = []
         for (var i = 0; i < files.length; i++) {
