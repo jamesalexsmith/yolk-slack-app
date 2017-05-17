@@ -3,7 +3,11 @@
 module.exports = (app) => {
 	let db = app.db
 	let slapp = app.slapp
-	let post_question_confirmation = require('../language/post_question/ask_question_confirmation.json')
+	let authenticate = require('./authenticate')(app)
+	let google_drive = require('../services/google_drive')(app)
+
+	// Languages
+	let lang_post_question_confirmation = require('../language/post_question/ask_question_confirmation.json')
 	let lang_next_button = require('../language/search/next_button.json')
 	let lang_prev_button = require('../language/search/prev_button.json')
 	let lang_dismiss_button = require('../language/search/dismiss_button.json')
@@ -11,7 +15,6 @@ module.exports = (app) => {
 	let lang_qa_pair = require('../language/search/qa_pair.json')
 	let lang_pagination = require('../language/search/pagination.json')
 	let lang_results = require('../language/search/results.json')
-	let authenticate = require('./authenticate')(app)
 
 	slapp.command('/yolk', '(search)', (msg, text) => {
 		console.log('search', msg)
@@ -24,7 +27,7 @@ module.exports = (app) => {
 		} else if (text.startsWith('Noticed you asked me to post a ')) {
 			return {}
 		} else if (authenticate.getGoogleCode(text)) {
-			 // Google auth token
+			// Google auth token
 			authenticate.googleAuthFlow(msg, authenticate.getGoogleCode(text))
 			return {}
 		} else if (msg.body.event.thread_ts) { // In a thread
@@ -34,118 +37,171 @@ module.exports = (app) => {
 		startSearchFlow(msg, text)
 	})
 
-	function startSearchFlow(msg, question, ephemeral=false, sniffer_asker_user_id=null, response_url=null) {
-		db.getQAPairs(msg.meta.team_id, question)
-			// TODO ORDER BY RELEVANCE
-			.limit(9)
-			.exec(function (err, docs) {
-				if (err) {
-					console.log('Error search question models', err)
-					return
-				}
-				if (docs.length == 0) {
-					// No results in Yolk
-					startQuestionPostingFlow('_I couldn\'t find an answer to your question, would you like to post it in Slack?_', msg, question)
+	function startSearchFlow(msg, question, ephemeral = false, sniffer_asker_user_id = null, response_url = null) {
+		let is_sniffing = ephemeral // If we want the search results to be ephemeral we're sniffing
 
-				} else {
-					// Found already matched Q&A pairs
-					let paginations = paginateMatches(docs)
-					let reply = formatResults(msg, paginations, 0)
+		db.getUser(msg.meta.team_id, msg.meta.user_id).exec(function (err, users) {
+			let user = users[0]
 
-					let state = {
-						'question': question,
-						'reply': reply,
-						'paginations': paginations,
-						'index': 0,
-						'ephemeral': ephemeral,
-						'sniffer_asker_user_id': sniffer_asker_user_id,
-						'sniffer_response_url': response_url
+			if (user.google_credentials) {
+				let credentials = JSON.parse(user.google_credentials)
+
+				google_drive.searchFiles(credentials, 'founders agreement', function (err, googleSearchResults) {
+					if (err) {
+						console.log('Error fetching google files in drive when searching', err)
+						return err
 					}
 
-					if (ephemeral) {
-						// Need to respond with a new message
-						reply.replace_original = false
-						msg.respond(response_url, reply)
-					} else {
-						msg.say(reply)
-					}
+					google_drive.readFiles(credentials, googleSearchResults, function (err, googleFiles) {
+						db.getQAPairs(msg.meta.team_id, question).limit(9).exec(function (err, docs) { // TODO ORDER BY RELEVANCE
 
-					msg.route('search_flow', state)
-				}
-			})
+							// Label the type of item so when building the message the style is reserved
+							docs = labelType(docs, 'yolk')
+							googleFiles = labelType(googleFiles, 'google')
+
+							console.log(docs)
+							console.log(googleFiles)
+
+							let searchResults = docs.concat(googleFiles)
+
+							if (err) {
+								console.log('Error searching question models', err)
+								return err
+							}
+
+							if (docs.length == 0 && googleFiles.length == 0) { // No validated results in Yolk 
+								startQuestionPostingFlow('_I couldn\'t find an answer to your question. Would you like to post it in Slack?_', msg, question)
+							} else { // Found already matched Q&A pairs
+								let paginations = paginateMatches(docs)
+								let reply = formatResults(msg, paginations, 0)
+
+								if (docs.length == 0) { // No validated results but we found results in google
+									reply.text = '_I couldn\'t find an answer to your question that your peers have vetted but I think it may exist in Google Drive._'
+								}
+
+								let state = {
+									'question': question,
+									'reply': reply,
+									'paginations': paginations,
+									'index': 0,
+									'ephemeral': ephemeral,
+									'sniffer_asker_user_id': sniffer_asker_user_id,
+									'sniffer_response_url': response_url
+								}
+
+								if (ephemeral) {
+									// Need to respond with a new message
+									reply.replace_original = false
+									msg.respond(response_url, reply)
+								} else {
+									msg.say(reply)
+								}
+
+								msg.route('search_flow', state)
+							}
+						})
+					})
+				})
+			}
+		})
 	}
 
 	slapp.route('search_flow', (msg, state) => {
-		let answer = msg.body.actions[0].name
+		if (msg.type === 'action') {
+			let answer = msg.body.actions[0].name
 
-		if (answer === 'next') {
-			state.index += 1
-			let reply = formatResults(msg, state.paginations, state.index)
-			msg
-				.respond(reply)
-				.route('search_flow', state)
-		} 
-		
-		else if (answer === 'previous') {
-			state.index -= 1
-			let reply = formatResults(msg, state.paginations, state.index)
-			msg
-				.respond(reply)
-				.route('search_flow', state)
-		} 
-		
-		else if (answer === 'validate') {
-			msg.respond('I\'m glad to have helped, I\'ll send along the thanks! :smile:')
-			let meta_data = JSON.parse(msg.body.actions[0].value)
-			let qa_pair_index = meta_data.qa_pair_index
-			let asker_user_id = meta_data.asker_user_id
-			let answerer_user_id = meta_data.answerer_user_id
+			if (answer === 'next') {
+				state.index += 1
+				let reply = formatResults(msg, state.paginations, state.index)
+				msg
+					.respond(reply)
+					.route('search_flow', state)
+			} else if (answer === 'previous') {
+				state.index -= 1
+				let reply = formatResults(msg, state.paginations, state.index)
+				msg
+					.respond(reply)
+					.route('search_flow', state)
+			} else if (answer === 'validate') {
+				msg.respond('I\'m glad to have helped, I\'ll send along the thanks! :smile:')
+				let meta_data = JSON.parse(msg.body.actions[0].value)
+				let qa_pair_index = meta_data.qa_pair_index
+				let asker_user_id = meta_data.asker_user_id
+				let answerer_user_id = meta_data.answerer_user_id
 
-			// If the search flow started ephemerally from a sniff original_message isn't passed by slack
-			let qa_pair = false
-			if (!state.ephemeral) {
-				qa_pair = msg.body.original_message.attachments[qa_pair_index]
-			}
-			// In a sniffing flow the answer was found so update the original yolk message to say it was found
-			else if (state.ephemeral) {
-				let response = 'Hey <@' + state.sniffer_asker_user_id + '>, <@' + msg.meta.user_id + '> thinks this may be the answer!\n>>>\n'
-				if (state.sniffer_asker_user_id == msg.meta.user_id) {
-					// The question poster sniffed and found an answer on their own
-					response = '<@' + state.sniffer_asker_user_id + '> found the answer!\n>>>\n'
+				// If the search flow started ephemerally from a sniff original_message isn't passed by slack
+				let qa_pair = false
+				if (!state.ephemeral) {
+					qa_pair = msg.body.original_message.attachments[qa_pair_index]
 				}
-				response += meta_data.answer
-				msg.respond(state.sniffer_response_url, response)
-			}
-			sendThanks(msg, qa_pair, asker_user_id, answerer_user_id)
-		} 
-		
-		else if (answer === 'question') {
-			let response_url = msg.body.response_url
+				// In a sniffing flow the answer was found so update the original yolk message to say it was found
+				else if (state.ephemeral) {
+					let response = 'Hey <@' + state.sniffer_asker_user_id + '>, <@' + msg.meta.user_id + '> thinks this may be the answer!\n>>>\n'
+					if (state.sniffer_asker_user_id == msg.meta.user_id) {
+						// The question poster sniffed and found an answer on their own
+						response = '<@' + state.sniffer_asker_user_id + '> found the answer!\n>>>\n'
+					}
+					response += meta_data.answer
+					msg.respond(state.sniffer_response_url, response)
+				}
+				sendThanks(msg, qa_pair, asker_user_id, answerer_user_id)
+				return
+			} else if (answer === 'question') {
+				let response_url = msg.body.response_url
 
-			msg.respond(response_url, {
-				text: '',
-				delete_original: true,
-			})
-			startQuestionPostingFlow('_Would you like me to ask this question for you?_', msg, state.question, state.ephemeral, state.sniffer_response_url)
-		} 
-		
-		else if (answer === 'dismiss') {
-			msg.respond(msg.body.response_url, {
-				text: 'Sorry I couldn\'t be of help to you. :disappointed:',
-				replace_original: true,
-			})
-
-			if (state.ephemeral) { // If ephemeral get rid of the sniff prompt
-				msg.respond(state.sniffer_response_url, {
+				msg.respond(response_url, {
 					text: '',
 					delete_original: true,
 				})
+				startQuestionPostingFlow('_Would you like me to ask this question for you?_', msg, state.question, state.ephemeral, state.sniffer_response_url)
+				return
+			} else if (answer === 'dismiss') {
+				msg.respond(msg.body.response_url, {
+					text: 'Sorry I couldn\'t be of help to you. :disappointed:',
+					replace_original: true,
+				})
+
+				if (state.ephemeral) { // If ephemeral get rid of the sniff prompt
+					msg.respond(state.sniffer_response_url, {
+						text: '',
+						delete_original: true,
+					})
+				}
+				return
 			}
+		} else {
+			if (state.ephemeral) { // If ephemeral get rid of the sniff prompt
+				state.original_msg.respond(state.sniffer_response_url, {
+					text: '',
+					delete_original: true,
+				})
+			} else {
+				msg
+					.say('_Please dismiss the search if you would like to start another one._')
+					.route('search_flow', state)
+
+			}
+			return
 		}
+
 	})
 
-	function startQuestionPostingFlow(text, msg, question, ephemeral=false, response_url=null) {
-		let reply = JSON.parse(JSON.stringify(post_question_confirmation))
+	function dismissSearchFlow(msg, state, text) {
+		msg.respond(msg.body.response_url, {
+			text: text,
+			replace_original: true,
+		})
+
+		if (state.ephemeral) { // If ephemeral get rid of the sniff prompt
+			msg.respond(state.sniffer_response_url, {
+				text: '',
+				delete_original: true,
+			})
+		}
+	}
+
+	function startQuestionPostingFlow(text, msg, question, ephemeral = false, response_url = null) {
+		let reply = JSON.parse(JSON.stringify(lang_post_question_confirmation))
 		let state = {
 			question: question
 		}
@@ -176,21 +232,27 @@ module.exports = (app) => {
 		let formatted_pagination = []
 		let formatted_qa_pair = JSON.parse(JSON.stringify(lang_qa_pair))
 		for (var i = 0; i < page.length; i++) {
-			let qa_pair = page[i]
-			formatted_qa_pair = JSON.parse(JSON.stringify(lang_qa_pair))
-			formatted_qa_pair.title = 'Q: ' + qa_pair.question + '\nA: ' + qa_pair.latest_accepted_answer
-			formatted_qa_pair.title_link = generateLinkToFirstComment(msg, qa_pair)
-			formatted_qa_pair.footer = generateFooter(qa_pair.author_user_id, qa_pair.latest_accepted_user_id, qa_pair.answered_at)
-			
-			// Pass along meta data for route handling
-			formatted_qa_pair.actions[0].value = JSON.stringify({
-				'qa_pair_index': i,
-				'qa_pair_ts': qa_pair.timestamp,
-				'answer': qa_pair.latest_accepted_answer,
-				'asker_user_id': qa_pair.author_user_id,
-				'answerer_user_id': qa_pair.latest_accepted_user_id
-			})
-			formatted_pagination.push(JSON.parse(JSON.stringify(formatted_qa_pair)))
+			if (page[i].type == 'yolk') {
+				let qa_pair = page[i]
+				formatted_qa_pair = JSON.parse(JSON.stringify(lang_qa_pair))
+				formatted_qa_pair.title = 'Q: ' + qa_pair.question + '\nA: ' + qa_pair.latest_accepted_answer
+				formatted_qa_pair.title_link = generateLinkToFirstComment(msg, qa_pair)
+				formatted_qa_pair.footer = generateFooter(qa_pair.author_user_id, qa_pair.latest_accepted_user_id, qa_pair.answered_at)
+
+				// Pass along meta data for route handling
+				formatted_qa_pair.actions[0].value = JSON.stringify({
+					'qa_pair_index': i,
+					'qa_pair_ts': qa_pair.timestamp,
+					'answer': qa_pair.latest_accepted_answer,
+					'asker_user_id': qa_pair.author_user_id,
+					'answerer_user_id': qa_pair.latest_accepted_user_id
+				})
+				formatted_pagination.push(JSON.parse(JSON.stringify(formatted_qa_pair)))
+			}
+
+			else if (page[i].type == 'google') {
+				let googleFile = page[i]
+			}
 		}
 		return JSON.parse(JSON.stringify(formatted_pagination))
 	}
@@ -253,7 +315,9 @@ module.exports = (app) => {
 			if (qa_pair) {
 				thanks_msg += '\n>>>' + qa_pair.title
 			}
-			sendDM(msg, asker_user_id, {text: thanks_msg})
+			sendDM(msg, asker_user_id, {
+				text: thanks_msg
+			})
 			return
 		}
 
@@ -262,7 +326,9 @@ module.exports = (app) => {
 			if (qa_pair) {
 				asker_thanks += '\n>>>' + qa_pair.title
 			}
-			sendDM(msg, asker_user_id, {text: asker_thanks})
+			sendDM(msg, asker_user_id, {
+				text: asker_thanks
+			})
 		}
 
 		if (msg.meta.user_id != answerer_user_id) {
@@ -270,7 +336,9 @@ module.exports = (app) => {
 			if (qa_pair) {
 				answerer_thanks += '\n>>>' + qa_pair.title
 			}
-			sendDM(msg, answerer_user_id, {text: answerer_thanks})
+			sendDM(msg, answerer_user_id, {
+				text: answerer_thanks
+			})
 		}
 	}
 
@@ -297,6 +365,15 @@ module.exports = (app) => {
 				}
 			})
 		})
+	}
+
+	function labelType(items, type) {
+		let labelledItems = []
+		for (var i = 0; i < items.length; i++) {
+			labelledItems.push(JSON.parse(JSON.stringify(items[i])))
+			labelledItems[i].type = type
+		}
+		return labelledItems
 	}
 
 	let methods = {}

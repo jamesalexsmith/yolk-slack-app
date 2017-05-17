@@ -89,7 +89,7 @@ module.exports = (app) => {
     }
 
     let exports = {}
-    exports.readFile = readFile
+    exports.readFiles = readFiles
     exports.searchFiles = searchFiles
 
     return exports

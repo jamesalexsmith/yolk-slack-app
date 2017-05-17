@@ -1,0 +1,26 @@
+{
+    "attachments": [
+        {
+    "callback_id": "validation",
+    "color": "#4885ed",
+    "title": "Yolk Founders Agreement",
+    "title_link": "https://www.google.com",
+    "text": "...The founders agrement states that sdjkfsdfkj kjsdfsdjkdjksf kjsdfjksjkfsdfkj sdf kjsdfkjsdfkjsfj...",
+    "footer": "From your Google Drive",
+    "fields": [{
+        "value": "",
+        "short": "true"
+    }, {
+        "value": "",
+        "short": "true"
+    }],
+    "actions": [{
+        "name": "create_qa_pair",
+        "style": "primary",
+        "text": "This is the answer!",
+        "type": "button",
+        "value": "create_qa_pair"
+    }]
+}
+    ]
+}
