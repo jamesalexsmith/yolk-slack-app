@@ -29,45 +29,7 @@ module.exports = (app) => {
                 return code
             }
         }
-        console.log('WARNING: Text ', text, 'did not contain a google code...')
-        return null
-    }
-
-    slapp.command('/yolk', 'test', (msg) => {
-        db.getUser(msg.meta.team_id, msg.meta.user_id).exec(function (err, users) {
-            let user = users[0]
-
-            if (user.google_credentials) {
-                let credentials = JSON.parse(user.google_credentials)
-                google_drive.searchFiles(credentials, 'founders agreement', readFiles.bind(null, msg, credentials))
-            }
-
-        })
-        msg.respond('testing google!')
-    })
-
-    function readFiles(msg, credentials, files) {
-        // Read all file asynchronously in parallel and wait for them to be done
-        let asyncCalls = []
-        for (var i = 0; i < files.length; i++) {
-            let file = files[i]
-            asyncCalls.push(function (callback) {
-                google_drive.readFile(credentials, file, callback)
-            })
-        }
-
-        async.parallel(asyncCalls, function (err, results) {
-            console.log('HAVE RESULTS ASYNCED PARALLEL')
-            console.log(files)
-            console.log(results)
-        })
-
-        // Read all files
-
-    }
-
-    function log(fileTexts) {
-        console.log('IN LOGGER')
+        return false
     }
 
     let methods = {}
