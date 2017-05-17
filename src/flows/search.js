@@ -181,10 +181,12 @@ module.exports = (app) => {
 						text = '<@' + state.sniffer_asker_user_id + '> found the answer!\n>>>\n'
 					}
 					// Recreate the attachment and post it
+					// TODO MAKE SURE SNIPPET IS NEVER TOO LONG
 					let qa_pair_attachment = JSON.parse(JSON.stringify(lang_google_drive_qa_pair))
 					qa_pair_attachment.title = meta_data.title
 					qa_pair_attachment.text = meta_data.snippet
-					qa_pair_attachment.footer = meta_data.footer
+					qa_pair_attachment.footer = 'Found in Google Drive'
+					qa_pair_attachment.actions = []
 					let response = {text: text, 'attachments': [qa_pair_attachment]}
 
 					msg.respond(state.sniffer_response_url, response)
@@ -300,8 +302,7 @@ module.exports = (app) => {
 					'id': googleFile.meta.id,
 					'title': googleFile.meta.name,
 					'snippet': '...' + googleFile.snippet + '...',
-					'webViewLink': googleFile.meta.webViewLink,
-					'footer': generateGoogleFooter(googleFile.meta.modifiedTime)
+					'webViewLink': googleFile.meta.webViewLink
 				})
 				formatted_pagination.push(JSON.parse(JSON.stringify(formatted_qa_pair)))
 			}
