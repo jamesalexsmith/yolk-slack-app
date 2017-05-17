@@ -106,6 +106,8 @@ module.exports = (app) => {
         let client = app.authentications.google.getClient()
         client.credentials = credentials
 
+        query = query.replace(/['"“”]+/g, '')
+
         drive.files.list({
             q: "fullText contains '" + query + "' and mimeType = 'application/vnd.google-apps.document'",
             supportsTeamDrives: true,
