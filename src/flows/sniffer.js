@@ -21,6 +21,18 @@ module.exports = (app) => {
                 }
                 if (docs.length == 0) { // No results in Yolk
                     console.log('No db sniffer search results for ', text)
+                    let searchMePrompt = JSON.parse(JSON.stringify(lang_search_me_prompt))
+                    searchMePrompt.text = '_Hey <@' + msg.meta.user_id + '>! I couldn\'t find an answer to your question that your peers have vetted but I think it may exist in Google Drive._'
+
+                    // Attach the question text and asker id to the button values
+                    for (var i = 0; i < searchMePrompt.attachments[0].actions.length; i++) {
+                        searchMePrompt.attachments[0].actions[i].value = JSON.stringify({
+                            question: text,
+                            sniffer_asker_user_id: msg.meta.user_id
+                        })
+
+                    }
+                    msg.say(searchMePrompt)
                     return
                 }
 
@@ -29,22 +41,17 @@ module.exports = (app) => {
 
                 // Attach the question text and asker id to the button values
                 for (var i = 0; i < searchMePrompt.attachments[0].actions.length; i++) {
-                    searchMePrompt.attachments[0].actions[i].value = JSON.stringify({question: text, sniffer_asker_user_id: msg.meta.user_id})
+                    searchMePrompt.attachments[0].actions[i].value = JSON.stringify({
+                        question: text,
+                        sniffer_asker_user_id: msg.meta.user_id
+                    })
 
                 }
                 msg.say(searchMePrompt)
                 return
             })
-            
-        let searchMePrompt = JSON.parse(JSON.stringify(lang_search_me_prompt))
-        searchMePrompt.text = '_Hey <@' + msg.meta.user_id + '>! I couldn\'t find an answer to your question that your peers have vetted but I think it may exist in Google Drive._'
 
-        // Attach the question text and asker id to the button values
-        for (var i = 0; i < searchMePrompt.attachments[0].actions.length; i++) {
-            searchMePrompt.attachments[0].actions[i].value = JSON.stringify({question: text, sniffer_asker_user_id: msg.meta.user_id})
 
-        }
-        msg.say(searchMePrompt)
         // If yes, start search flow ephemeral to who clicked it, update previous message saying <user2> is looking for an answer
     }
 
