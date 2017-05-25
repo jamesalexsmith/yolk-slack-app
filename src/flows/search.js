@@ -6,6 +6,8 @@ module.exports = (app) => {
 	let authenticate = require('./authenticate')(app)
 	let google_drive = require('../services/google_drive')(app)
 
+	const SCORE_THRESHOLD = 1.0
+
 	// Languages
 	let lang_post_question_confirmation = require('../language/post_question/ask_question_confirmation.json')
 	let lang_next_button = require('../language/search/next_button.json')
@@ -54,11 +56,15 @@ module.exports = (app) => {
 					}
 
 					google_drive.readFiles(credentials, question, googleSearchResults, function (err, googleFiles) {
-						db.getQAPairs(msg.meta.team_id, question).limit(9).exec(function (err, docs) { // TODO ORDER BY RELEVANCE
+						db.getQAPairs(msg.meta.team_id, question).limit(9).exec(function (err, docs) {
 							if (err) {
-								console.log('Error fetching validated qa pairs', err)
+								console.log('Error fetching validated qa pairs in search flow', err)
 								return
 							}
+
+							// Remove docs which have less score that THRESHOLD
+							
+							console.log(docs)
 
 							// Label the type of item so when building the message the style is reserved
 							docs = labelType(docs, 'yolk')

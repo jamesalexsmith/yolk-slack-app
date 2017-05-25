@@ -161,21 +161,6 @@ module.exports = (mongoose) => {
     }
 
     methods.getQAPairs = function (team_id, text) {
-        // let searchQuery = {
-        //     {
-        //         team_id: team_id,
-        //         $text: {
-        //             $search: text
-        //         },
-        //         answered: true
-        //     },
-        //     {
-        //         score: {
-        //             $meta: "textScore"
-        //         }
-        //     }
-        // }
-
         return Question.find({
             team_id: team_id,
             answered: true,
@@ -191,8 +176,6 @@ module.exports = (mongoose) => {
                 $meta: "textScore"
             }
         })
-
-        // return Question.find(searchQuery)
     }
 
     methods.getLaunchedTeamIDs = function () {
