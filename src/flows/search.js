@@ -62,7 +62,7 @@ module.exports = (app) => {
 								return
 							}
 
-							// Remove docs which have less score that THRESHOLD
+							// Remove docs which have less score than threshold
 							
 							console.log(docs)
 
