@@ -25,7 +25,7 @@ module.exports = (app) => {
 	})
 
 	slapp.command('/yolk', 'launch', (msg) => {
-		// Set launched to True and launch date in database
+		// Set launched to true and launch date in database
 		let teamQuery = {team_id: msg.meta.team_id}
 		let updateQuery = {$set: {'launched': true, 'launched_at': new Date()}}
 		db.updateTeam(teamQuery, updateQuery)
