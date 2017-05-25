@@ -11,6 +11,13 @@ module.exports = (app) => {
 		addUsers(msg)
 	})
 
+	slapp.command('/yolk', 'softlaunch', (msg) => {
+		addTeam(msg)
+		addUsers(msg)
+		app.team_ids_launched.push(msg.meta.team_id)
+		msg.respond('Soft Launched Yolk!')
+	})
+
 	slapp.command('/yolk', 'reinstall', (msg) => {
 		addTeam(msg)
 		addUsers(msg)
