@@ -9,3 +9,4 @@ slackscopes:
   - channels:history
   - chat:write:bot
   - search:read
+  - users:read

@@ -101,7 +101,7 @@ module.exports = (app) => {
 	}
 
 	function addUsers(msg) {
-		let usersOptions = {token: msg.meta.bot_token}
+		let usersOptions = {token: msg.meta.app_token}
 		slapp.client.users.list(usersOptions, (err, usersData) => {
 			if (err) {
 				console.log('Error listing all users in team added event', err)
