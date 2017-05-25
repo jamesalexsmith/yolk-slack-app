@@ -34,7 +34,9 @@ module.exports = (mongoose) => {
         date: Date
     })
 
-    questionSchema.index({'$**': 'text'});
+    questionSchema.index({
+        '$**': 'text'
+    });
 
     var validationSchema = new Schema({
         question_searched: String,
@@ -49,7 +51,9 @@ module.exports = (mongoose) => {
         date: Date
     })
 
-    validationSchema.index({'$**': 'text'});
+    validationSchema.index({
+        '$**': 'text'
+    });
 
     var teamSchema = new Schema({
         team_name: String,
@@ -85,41 +89,45 @@ module.exports = (mongoose) => {
     methods.Team = Team
     methods.User = User
 
-    methods.saveTeam = function(contents) {
+    methods.saveTeam = function (contents) {
         let team = new Team(contents)
         team.save(function (err, team) {
             if (err) {
                 console.log('Error saving team', err)
-            } 
+            }
         })
     }
 
-    methods.updateTeam = function(query, update) {
-        Team.findOneAndUpdate(query, update, {upsert:true}, function (err, doc) {
+    methods.updateTeam = function (query, update) {
+        Team.findOneAndUpdate(query, update, {
+            upsert: true
+        }, function (err, doc) {
             if (err) {
                 console.log('Error updating team in mongodb', err)
             }
         })
     }
 
-    methods.saveUser = function(contents) {
+    methods.saveUser = function (contents) {
         let user = new User(contents)
         user.save(function (err, user) {
             if (err) {
                 console.log('Error saving user', err)
-            } 
+            }
         })
     }
 
-    methods.updateUser = function(query, update) {
-        User.findOneAndUpdate(query, update, {upsert:true}, function (err, doc) {
+    methods.updateUser = function (query, update) {
+        User.findOneAndUpdate(query, update, {
+            upsert: true
+        }, function (err, doc) {
             if (err) {
                 console.log('Error updating user in mongodb', err)
             }
         })
     }
 
-    methods.updateQuestion = function(query, update) {
+    methods.updateQuestion = function (query, update) {
         Question.findOneAndUpdate(query, update, function (err, doc) {
             if (err) {
                 console.log('Error updating question in mongodb', err)
@@ -127,54 +135,63 @@ module.exports = (mongoose) => {
         })
     }
 
-    methods.getUser = function(team_id, user_id) {
+    methods.getUser = function (team_id, user_id) {
         let searchQuery = {
-			team_id: team_id,
-			user_id: user_id
-		}
+            team_id: team_id,
+            user_id: user_id
+        }
         return User.find(searchQuery)
     }
 
-    methods.saveQuestion = function(contents) {
+    methods.saveQuestion = function (contents) {
         let question = new Question(contents);
 
         question.save(function (err, question) {
             if (err) {
                 console.log('Error saving question', err)
-            } 
+            }
         })
     }
 
-    methods.saveValidation = function(contents) {
+    methods.saveValidation = function (contents) {
         let validation = new Validation(contents);
 
         validation.save(function (err, validation) {
             if (err) {
                 console.log('Error saving validation', err)
-            } 
+            }
         })
     }
 
-    methods.getQAPairs = function(team_id, text) {
+    methods.getQAPairs = function (team_id, text) {
         let searchQuery = {
-			team_id: team_id,
-			$text: {
-				$search: text
-			},
-			answered: true
-		}
-        return Question.find(searchQuery)
-    } 
+            team_id: team_id,
+            $text: {
+                $search: text
+            },
+            answered: true
+        }
+        return Question.find(searchQuery).sort({
+            score: {
+                $meta: "textScore"
+            }
+        })
+    }
 
-    methods.getLaunchedTeamIDs = function() {
+    methods.getLaunchedTeamIDs = function () {
         let searchQuery = {
             launched: true
         }
         return Team.find(searchQuery)
     }
 
-    methods.addGoogleCredentialsToUser = function(msg, credentials) {
-        User.findOneAndUpdate({team_id: msg.meta.team_id, user_id: msg.meta.user_id}, {google_credentials: JSON.stringify(credentials)}, function (err, doc) {
+    methods.addGoogleCredentialsToUser = function (msg, credentials) {
+        User.findOneAndUpdate({
+            team_id: msg.meta.team_id,
+            user_id: msg.meta.user_id
+        }, {
+            google_credentials: JSON.stringify(credentials)
+        }, function (err, doc) {
             if (err) {
                 console.log('Error adding google auth to user in mongodb', err)
             }
