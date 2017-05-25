@@ -35,8 +35,9 @@ module.exports = (mongoose) => {
     })
 
     questionSchema.index({
-        '$**': 'text'
-    });
+        'question': 'text',
+        'latest_accepted_answer': 'text'
+    })
 
     var validationSchema = new Schema({
         question_searched: String,
@@ -50,10 +51,6 @@ module.exports = (mongoose) => {
         timestamp: String,
         date: Date
     })
-
-    validationSchema.index({
-        '$**': 'text'
-    });
 
     var teamSchema = new Schema({
         team_name: String,
@@ -164,18 +161,38 @@ module.exports = (mongoose) => {
     }
 
     methods.getQAPairs = function (team_id, text) {
-        let searchQuery = {
+        // let searchQuery = {
+        //     {
+        //         team_id: team_id,
+        //         $text: {
+        //             $search: text
+        //         },
+        //         answered: true
+        //     },
+        //     {
+        //         score: {
+        //             $meta: "textScore"
+        //         }
+        //     }
+        // }
+
+        return Question.find({
             team_id: team_id,
+            answered: true,
             $text: {
                 $search: text
-            },
-            answered: true
-        }
-        return Question.find(searchQuery).sort({
+            }
+        }, {
+            score: {
+                $meta: "textScore"
+            }
+        }).sort({
             score: {
                 $meta: "textScore"
             }
         })
+
+        // return Question.find(searchQuery)
     }
 
     methods.getLaunchedTeamIDs = function () {
