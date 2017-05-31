@@ -4,9 +4,9 @@
 module.exports = (app) => {
 	app.flows = {
 		help: require('./help')(app),
+		import: require('./import')(app),
 		ask: require('./ask')(app),
 		search: require('./search')(app),
-		import: require('./import')(app),
 		export: require('./export')(app),
 		answer: require('./answer')(app),
 		team_events: require('./team_events')(app),

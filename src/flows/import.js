@@ -3,7 +3,7 @@
 module.exports = (app) => {
 	let db = app.db
 	let slapp = app.slapp
-	let regex = '!Question!: (.*) !Answer!: (.*)'
+	let regex = '!Question!: (.*) !Answer!: (.*) !Channel!: (.*)'
 
 	function createQuestionModelContents(question, answer, team_id, team_name, bot_user_id, channel_id) {
 		return {
@@ -30,21 +30,16 @@ module.exports = (app) => {
 		}
 	}
 
-	slapp.command('/yolk', 'import', (msg) => {
-		let text = msg.body.text
+    slapp.message('yolk import !Question!: (.*) !Answer!: (.*) !Channel!: (.*)', ['direct_message'], (msg, text, question, answer, channel) => {
 		let team_id = msg.body.team_id
 		let team_name = msg.meta.team_name
 		let bot_user_id = msg.meta.bot_user_id
-		let channel_id = msg.meta.channel_id
-
-		let matches = text.match(regex)
-		let question = matches[1]
-		let answer = matches[2]
+		let channel_id = channel.match('<#(.*)\\|')[1]
 
 		let contents = createQuestionModelContents(question, answer, team_id, team_name, bot_user_id, channel_id)
 		db.saveQuestion(contents)
 
-		msg.respond('>Q: ' + question + '\n>A: ' + answer + '\n Saved to DB in channel: <#' + channel_id + '>')
+		msg.say('>Q: ' + question + '\n>A: ' + answer + '\n Saved to DB in channel: <#' + channel_id + '>')
 	})
 
 	// slapp.event('file_shared', function (msg) {

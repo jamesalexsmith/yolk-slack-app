@@ -27,6 +27,8 @@ module.exports = (app) => {
 	slapp.message('(.*)', ['direct_message'], (msg, text) => {
 		if (text === 'help') {
 			return {}
+		} else if (text.startsWith('yolk import')) {
+			return {}
 		} else if (text.startsWith('Noticed you asked me to post a ')) {
 			return {}
 		} else if (authenticate.getGoogleCode(text)) {
