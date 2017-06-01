@@ -34,10 +34,10 @@ module.exports = (app) => {
 		let team_id = msg.body.team_id
 		let team_name = msg.meta.team_name
 		let bot_user_id = msg.meta.bot_user_id
-		let channel_id = channel.match('<#(.*)\\|')[1]
-
 		console.log('Channel:', channel)
 		console.log('Channel Matches:', channel.match('<#(.*)\\|'))
+		let channel_id = channel.match('<#(.*)\\|')[1]
+
 
 		let contents = createQuestionModelContents(question, answer, team_id, team_name, bot_user_id, channel_id)
 		db.saveQuestion(contents)
