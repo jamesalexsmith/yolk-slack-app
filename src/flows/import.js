@@ -42,6 +42,8 @@ module.exports = (app) => {
 				return
 			}
 
+			console.log(data.channels)
+
 			for (var i = 0; i < data.channels.length; i++) {
 				if (channel == data.channels[i].name) {
 					let channel_id = data.channels[i].id
