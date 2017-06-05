@@ -35,6 +35,10 @@ module.exports = (app) => {
 		startOnboardingUsers(msg)
 	})
 
+	slapp.command('/yolk', 'googleauthlink', (msg) => {
+		msg.respond(app.authentications.google.authUrl)
+	})
+
 	function startOnboardingUsers(msg) {
 		// Fetch all users
 		let usersOptions = {token: msg.meta.bot_token}
