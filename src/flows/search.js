@@ -46,6 +46,11 @@ module.exports = (app) => {
 		let is_sniffing = ephemeral // If we want the search results to be ephemeral we're sniffing
 
 		db.getUser(msg.meta.team_id, msg.meta.user_id).exec(function (err, users) {
+			if (err) {
+				console.log('Error fetching users', users)
+				return err
+			}
+			console.log('USERS ARE:\n', users)
 			let user = users[0]
 
 			if (user.google_credentials) {
