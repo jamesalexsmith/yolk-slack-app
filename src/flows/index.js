@@ -6,12 +6,12 @@ module.exports = (app) => {
 		help: require('./help')(app),
 		import: require('./import')(app),
 		ask: require('./ask')(app),
-		search: require('./search')(app),
-		export: require('./export')(app),
-		answer: require('./answer')(app),
 		team_events: require('./team_events')(app),
+		message_dispatcher: require('./message_dispatcher')(app),
+		search: require('./search')(app),
+		answer: require('./answer')(app),
 		authenticate: require('./authenticate')(app),
-		message_dispatcher: require('./message_dispatcher')(app)
+		export: require('./export')(app)
 	}
 
 	return app.flows
