@@ -14,7 +14,12 @@ module.exports = (app) => {
 	slapp.command('/yolk', 'softlaunch', (msg) => {
 		addTeam(msg)
 		addUsers(msg)
+		
+		let teamQuery = {team_id: msg.meta.team_id}
+		let updateQuery = {$set: {'launched': true, 'launched_at': new Date()}}
+		db.updateTeam(teamQuery, updateQuery)
 		app.team_ids_launched.push(msg.meta.team_id)
+		
 		msg.respond('Soft Launched Yolk!')
 	})
 
